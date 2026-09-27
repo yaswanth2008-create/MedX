@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MediTrack FINAL — Hospital Patient Data Analysis System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#f4f6f9;--surface:#fff;--ink:#1b2430;--muted:#5b6b7c;--line:#e2e7ee;--brand:#0e6e5c;--brand-dark:#0a5346;--accent:#2f6fed;--warn:#c0392b;--gold:#b8860b;--radius:14px;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#12161b;--surface:#1b2129;--ink:#eef2f6;--muted:#9aa7b4;--line:#2a323c;}}
+:root[data-theme="dark"]{--bg:#12161b;--surface:#1b2129;--ink:#eef2f6;--muted:#9aa7b4;--line:#2a323c;}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);min-height:100%}
+h1,h2,h3{margin:0 0 6px}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);width:100%}
+label{font-size:12.5px;color:var(--muted);display:block;margin:8px 0 3px}
+.live-clock{font-size:12px;opacity:.95;white-space:nowrap}
+.topbar{position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0px));display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:18px;display:flex;align-items:center;gap:8px}
+.pill{background:rgba(255,255,255,.18);padding:4px 10px;border-radius:20px;font-size:12px}
+.btn{border:none;border-radius:9px;padding:9px 14px;font-weight:600;transition:.15s}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-dark)}
+.btn-outline{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)}
+.btn-danger{background:var(--warn);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12.5px;border-radius:7px}
+.wrap{max-width:1120px;margin:0 auto;padding:18px}
+.center-wrap{max-width:420px;margin:40px auto;padding:0 16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.grid{display:grid;gap:14px}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:680px){.grid-2,.grid-3,.grid-4{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+.stat .num{font-size:22px;font-weight:700;color:var(--brand)}
+.stat .lbl{font-size:11.5px;color:var(--muted);margin-top:2px}
+.role-card{border:1px solid var(--line);border-radius:var(--radius);padding:22px;text-align:center;cursor:pointer;background:var(--surface);transition:.15s}
+.role-card:hover{border-color:var(--brand);transform:translateY(-2px)}
+.role-card .emoji{font-size:34px}
+.tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.tab{padding:9px 14px;border:none;background:none;color:var(--muted);font-weight:600;border-bottom:2px solid transparent}
+.tab.active{color:var(--brand);border-color:var(--brand)}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 16px}
+.subtab{padding:7px 12px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:13px;font-weight:600}
+.subtab.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase}
+.tablewrap{overflow-x:auto}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:600}
+.tag.ok{background:#e4f6ee;color:#0e6e5c}
+.tag.warn{background:#fdeeee;color:#c0392b}
+.tag.info{background:#eaf1ff;color:#2f6fed}
+.tag.pend{background:#fff4e0;color:#b8860b}
+.muted{color:var(--muted);font-size:13px}
+.err{color:var(--warn);font-size:13px;margin-top:6px}
+.timeline{border-left:2px solid var(--line);margin-left:8px;padding-left:16px}
+.timeline .item{margin-bottom:14px;position:relative}
+.timeline .item:before{content:"";position:absolute;left:-21px;top:4px;width:9px;height:9px;border-radius:50%;background:var(--brand)}
+.hidden{display:none!important}
+.footer-note{text-align:center;color:var(--muted);font-size:12px;margin-top:20px}
+.searchrow{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.searchrow input,.searchrow select{width:auto;flex:1;min-width:120px}
+canvas{max-height:250px}
+.flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.alert{border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:13.5px;border-left:4px solid}
+.alert.high{background:#fdeeee;border-color:var(--warn)}
+.alert.attn{background:#fff4e0;border-color:var(--gold)}
+.alert.info{background:#eaf1ff;border-color:var(--accent)}
+.bar{background:var(--line);border-radius:8px;height:14px;overflow:hidden}
+.bar>div{height:100%;background:var(--brand)}
+.notif{padding:10px;border-radius:9px;border:1px solid var(--line);margin-bottom:8px;font-size:13.5px}
+.notif.unread{border-left:3px solid var(--brand);background:rgba(14,110,92,.05)}
+.security-card{border:1px solid var(--line);border-left:4px solid var(--brand);background:var(--surface);border-radius:12px;padding:14px;margin:12px 0}
+.otp-box{font-size:24px;letter-spacing:7px;text-align:center;font-weight:800;padding:14px;border:1px dashed var(--brand);border-radius:10px;margin:12px 0}
+.admin-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:20px;background:#eaf1ff;color:#2f6fed;font-size:12px;font-weight:700}
+@media print{body>*:not(#printArea){display:none!important}#printArea{display:block!important;white-space:pre-wrap;font-family:monospace;padding:20px}}
+#printArea{display:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<pre id="printArea"></pre>
+
+<script>
+const DATASET = [{"Name":"Christopher Brown","Age":30,"Gender":"Male","Blood Type":"B-","Medical Condition":"Cancer","Date of Admission":"2024-01-31","Doctor":"Matthew Smith","Billing Amount":18856.28,"Room Number":328,"Discharge Date":"2024-02-02","Test Results":"Normal"},{"Name":"James Rodriguez","Age":62,"Gender":"Male","Blood Type":"A+","Medical Condition":"Obesity","Date of Admission":"2019-08-20","Doctor":"Samantha Davies","Billing Amount":33643.33,"Room Number":265,"Discharge Date":"2019-08-26","Test Results":"Inconclusive"},{"Name":"Linda Davis","Age":76,"Gender":"Female","Blood Type":"A-","Medical Condition":"Obesity","Date of Admission":"2022-09-22","Doctor":"Tiffany Mitchell","Billing Amount":27955.1,"Room Number":205,"Discharge Date":"2022-10-07","Test Results":"Normal"},{"Name":"John Brown","Age":28,"Gender":"Female","Blood Type":"O+","Medical Condition":"Diabetes","Date of Admission":"2020-11-18","Doctor":"Kevin Wells","Billing Amount":37909.78,"Room Number":450,"Discharge Date":"2020-12-18","Test Results":"Abnormal"},{"Name":"Nancy Moore","Age":43,"Gender":"Female","Blood Type":"AB+","Medical Condition":"Cancer","Date of Admission":"2022-09-19","Doctor":"Kathleen Hanna","Billing Amount":14238.32,"Room Number":458,"Discharge Date":"2022-10-09","Test Results":"Abnormal"},{"Name":"Robert Jackson","Age":36,"Gender":"Male","Blood Type":"A+","Medical Condition":"Asthma","Date of Admission":"2023-12-20","Doctor":"Taylor Newton","Billing Amount":48145.11,"Room Number":389,"Discharge Date":"2023-12-24","Test Results":"Normal"},{"Name":"Susan Johnson","Age":21,"Gender":"Female","Blood Type":"AB-","Medical Condition":"Diabetes","Date of Admission":"2020-11-03","Doctor":"Kelly Olson","Billing Amount":19580.87,"Room Number":389,"Discharge Date":"2020-11-15","Test Results":"Inconclusive"},{"Name":"James Williams","Age":20,"Gender":"Female","Blood Type":"A+","Medical Condition":"Cancer","Date of Admission":"2021-12-28","Doctor":"Suzanne Thomas","Billing Amount":45820.46,"Room Number":277,"Discharge Date":"2022-01-07","Test Results":"Inconclusive"},{"Name":"Michael Davis","Age":82,"Gender":"Male","Blood Type":"AB+","Medical Condition":"Asthma","Date of Admission":"2020-07-01","Doctor":"Daniel Ferguson","Billing Amount":50119.22,"Room Number":316,"Discharge Date":"2020-07-14","Test Results":"Abnormal"},{"Name":"Thomas Martin","Age":58,"Gender":"Female","Blood Type":"AB-","Medical Condition":"Cancer","Date of Admission":"2021-05-23","Doctor":"Heather Day","Billing Amount":19784.63,"Room Number":249,"Discharge Date":"2021-06-22","Test Results":"Inconclusive"},{"Name":"James Moore","Age":72,"Gender":"Male","Blood Type":"O+","Medical Condition":"Cancer","Date of Admission":"2020-04-19","Doctor":"John Duncan","Billing Amount":12576.8,"Room Number":394,"Discharge Date":"2020-04-22","Test Results":"Normal"},{"Name":"Michael Moore","Age":38,"Gender":"Female","Blood Type":"A-","Medical Condition":"Hypertension","Date of Admission":"2023-08-13","Doctor":"Douglas Mayo","Billing Amount":7999.59,"Room Number":288,"Discharge Date":"2023-09-05","Test Results":"Inconclusive"},{"Name":"Susan Davis","Age":75,"Gender":"Female","Blood Type":"A+","Medical Condition":"Diabetes","Date of Admission":"2019-12-12","Doctor":"Kenneth Fletcher","Billing Amount":43282.28,"Room Number":134,"Discharge Date":"2019-12-28","Test Results":"Abnormal"},{"Name":"Joseph Jackson","Age":68,"Gender":"Female","Blood Type":"AB+","Medical Condition":"Asthma","Date of Admission":"2020-05-22","Doctor":"Theresa Freeman","Billing Amount":33207.71,"Room Number":309,"Discharge Date":"2020-06-19","Test Results":"Normal"},{"Name":"William Smith","Age":44,"Gender":"Female","Blood Type":"AB+","Medical Condition":"Cancer","Date of Admission":"2021-10-08","Doctor":"Roberta Stewart","Billing Amount":40701.6,"Room Number":182,"Discharge Date":"2021-10-13","Test Results":"Normal"},{"Name":"Matthew Garcia","Age":46,"Gender":"Female","Blood Type":"AB-","Medical Condition":"Obesity","Date of Admission":"2023-01-01","Doctor":"Maria Dougherty","Billing Amount":12263.36,"Room Number":465,"Discharge Date":"2023-01-11","Test Results":"Inconclusive"},{"Name":"Daniel Wilson","Age":63,"Gender":"Female","Blood Type":"A+","Medical Condition":"Arthritis","Date of Admission":"2020-06-23","Doctor":"Erica Spencer","Billing Amount":24499.85,"Room Number":114,"Discharge Date":"2020-07-14","Test Results":"Normal"},{"Name":"David Rodriguez","Age":38,"Gender":"Male","Blood Type":"AB-","Medical Condition":"Obesity","Date of Admission":"2020-03-08","Doctor":"Justin Kim","Billing Amount":17440.47,"Room Number":449,"Discharge Date":"2020-04-02","Test Results":"Abnormal"},{"Name":"John Miller","Age":34,"Gender":"Female","Blood Type":"A-","Medical Condition":"Hypertension","Date of Admission":"2021-03-04","Doctor":"Justin Moore Jr.","Billing Amount":18843.02,"Room Number":260,"Discharge Date":"2021-03-14","Test Results":"Abnormal"},{"Name":"Matthew Hernandez","Age":63,"Gender":"Male","Blood Type":"B+","Medical Condition":"Asthma","Date of Admission":"2022-11-15","Doctor":"Denise Galloway","Billing Amount":23762.2,"Room Number":465,"Discharge Date":"2022-11-22","Test Results":"Normal"},{"Name":"Patricia Williams","Age":67,"Gender":"Female","Blood Type":"A-","Medical Condition":"Asthma","Date of Admission":"2023-06-28","Doctor":"Krista Smith","Billing Amount":42.51,"Room Number":115,"Discharge Date":"2023-07-02","Test Results":"Normal"},{"Name":"Richard Brown","Age":48,"Gender":"Male","Blood Type":"B+","Medical Condition":"Asthma","Date of Admission":"2020-01-21","Doctor":"Gregory Smith","Billing Amount":17695.91,"Room Number":295,"Discharge Date":"2020-02-09","Test Results":"Normal"},{"Name":"Barbara Lopez","Age":58,"Gender":"Female","Blood Type":"O+","Medical Condition":"Arthritis","Date of Admission":"2022-05-12","Doctor":"Vanessa Newton","Billing Amount":5998.1,"Room Number":327,"Discharge Date":"2022-06-10","Test Results":"Inconclusive"},{"Name":"Karen Rodriguez","Age":59,"Gender":"Male","Blood Type":"A+","Medical Condition":"Asthma","Date of Admission":"2021-08-02","Doctor":"Donna Martinez MD","Billing Amount":25250.05,"Room Number":119,"Discharge Date":"2021-08-12","Test Results":"Inconclusive"},{"Name":"Betty Johnson","Age":72,"Gender":"Female","Blood Type":"AB+","Medical Condition":"Hypertension","Date of Admission":"2020-05-15","Doctor":"Stephanie Kramer","Billing Amount":33211.3,"Room Number":109,"Discharge Date":"2020-06-08","Test Results":"Inconclusive"},{"Name":"Lisa Anderson","Age":73,"Gender":"Male","Blood Type":"AB+","Medical Condition":"Obesity","Date of Admission":"2020-05-15","Doctor":"Angela Contreras","Billing Amount":19746.83,"Room Number":162,"Discharge Date":"2020-05-20","Test Results":"Abnormal"},{"Name":"Sarah Brown","Age":51,"Gender":"Female","Blood Type":"O-","Medical Condition":"Asthma","Date of Admission":"2023-12-23","Doctor":"Wendy Glenn","Billing Amount":26786.53,"Room Number":401,"Discharge Date":"2024-01-19","Test Results":"Normal"},{"Name":"Sandra Gonzalez","Age":34,"Gender":"Female","Blood Type":"A+","Medical Condition":"Diabetes","Date of Admission":"2022-06-21","Doctor":"James Ellis","Billing Amount":18834.8,"Room Number":157,"Discharge Date":"2022-06-30","Test Results":"Abnormal"},{"Name":"Robert Moore","Age":38,"Gender":"Female","Blood Type":"O-","Medical Condition":"Hypertension","Date of Admission":"2021-01-03","Doctor":"Jared Bruce Jr.","Billing Amount":32643.3,"Room Number":223,"Discharge Date":"2021-01-16","Test Results":"Normal"},{"Name":"Elizabeth Martin","Age":63,"Gender":"Female","Blood Type":"B+","Medical Condition":"Hypertension","Date of Admission":"2023-10-03","Doctor":"Brandy Mitchell","Billing Amount":5767.01,"Room Number":293,"Discharge Date":"2023-10-12","Test Results":"Abnormal"},{"Name":"Mark Lopez","Age":34,"Gender":"Male","Blood Type":"B-","Medical Condition":"Asthma","Date of Admission":"2019-08-18","Doctor":"Jacob Huynh","Billing Amount":47909.13,"Room Number":371,"Discharge Date":"2019-09-01","Test Results":"Inconclusive"},{"Name":"Charles Miller","Age":23,"Gender":"Female","Blood Type":"A+","Medical Condition":"Arthritis","Date of Admission":"2019-11-03","Doctor":"Kristina Frazier","Billing Amount":25835.32,"Room Number":108,"Discharge Date":"2019-11-29","Test Results":"Abnormal"},{"Name":"Daniel Williams","Age":78,"Gender":"Male","Blood Type":"AB-","Medical Condition":"Arthritis","Date of Admission":"2023-05-18","Doctor":"John Hartman","Billing Amount":17993.23,"Room Number":245,"Discharge Date":"2023-06-15","Test Results":"Normal"},{"Name":"Mary Davis","Age":43,"Gender":"Male","Blood Type":"AB-","Medical Condition":"Cancer","Date of Admission":"2023-05-24","Doctor":"Heather Garcia","Billing Amount":21185.95,"Room Number":494,"Discharge Date":"2023-06-03","Test Results":"Normal"},{"Name":"Matthew Martinez","Age":30,"Gender":"Female","Blood Type":"AB+","Medical Condition":"Diabetes","Date of Admission":"2020-01-17","Doctor":"Lynn Young","Billing Amount":8408.95,"Room Number":285,"Discharge Date":"2020-02-10","Test Results":"Normal"},{"Name":"Robert Davis","Age":25,"Gender":"Female","Blood Type":"AB+","Medical Condition":"Asthma","Date of Admission":"2021-01-07","Doctor":"Emma Allison","Billing Amount":45453.42,"Room Number":228,"Discharge Date":"2021-01-26","Test Results":"Abnormal"},{"Name":"Margaret Brown","Age":33,"Gender":"Male","Blood Type":"AB+","Medical Condition":"Diabetes","Date of Admission":"2019-10-14","Doctor":"Laura Myers","Billing Amount":4397.78,"Room Number":481,"Discharge Date":"2019-10-19","Test Results":"Inconclusive"},{"Name":"Richard Rodriguez","Age":26,"Gender":"Female","Blood Type":"B-","Medical Condition":"Hypertension","Date of Admission":"2021-12-19","Doctor":"Travis Parsons","Billing Amount":9380.33,"Room Number":212,"Discharge Date":"2022-01-16","Test Results":"Normal"},{"Name":"Joseph Lopez","Age":70,"Gender":"Female","Blood Type":"O-","Medical Condition":"Diabetes","Date of Admission":"2022-03-12","Doctor":"Christine Johnson","Billing Amount":48290.69,"Room Number":113,"Discharge Date":"2022-03-29","Test Results":"Abnormal"},{"Name":"Jennifer Lopez","Age":57,"Gender":"Female","Blood Type":"B-","Medical Condition":"Obesity","Date of Admission":"2021-01-17","Doctor":"Emily Taylor","Billing Amount":32973.94,"Room Number":272,"Discharge Date":"2021-01-29","Test Results":"Abnormal"},{"Name":"Barbara Miller","Age":74,"Gender":"Female","Blood Type":"B-","Medical Condition":"Hypertension","Date of Admission":"2021-09-15","Doctor":"William Reynolds","Billing Amount":49943.28,"Room Number":478,"Discharge Date":"2021-10-05","Test Results":"Normal"},{"Name":"Nancy Rodriguez","Age":81,"Gender":"Male","Blood Type":"A+","Medical Condition":"Hypertension","Date of Admission":"2020-01-27","Doctor":"Jennifer Carter","Billing Amount":35633.96,"Room Number":196,"Discharge Date":"2020-02-09","Test Results":"Normal"},{"Name":"Daniel Williams","Age":49,"Gender":"Female","Blood Type":"A-","Medical Condition":"Asthma","Date of Admission":"2022-06-24","Doctor":"Matthew Thomas","Billing Amount":25966.33,"Room Number":418,"Discharge Date":"2022-07-18","Test Results":"Normal"},{"Name":"Karen Garcia","Age":26,"Gender":"Female","Blood Type":"AB+","Medical Condition":"Obesity","Date of Admission":"2021-06-09","Doctor":"Mary Logan","Billing Amount":21784.45,"Room Number":410,"Discharge Date":"2021-07-01","Test Results":"Normal"},{"Name":"Sarah Davis","Age":81,"Gender":"Female","Blood Type":"AB-","Medical Condition":"Cancer","Date of Admission":"2020-08-23","Doctor":"Kristin Martinez","Billing Amount":42684.56,"Room Number":328,"Discharge Date":"2020-09-08","Test Results":"Abnormal"},{"Name":"Jennifer Anderson","Age":65,"Gender":"Male","Blood Type":"O+","Medical Condition":"Cancer","Date of Admission":"2022-10-12","Doctor":"Daniel Murphy","Billing Amount":45585.89,"Room Number":300,"Discharge Date":"2022-11-02","Test Results":"Normal"},{"Name":"Richard Rodriguez","Age":31,"Gender":"Female","Blood Type":"O+","Medical Condition":"Hypertension","Date of Admission":"2021-12-01","Doctor":"Emily Patterson","Billing Amount":29615.44,"Room Number":211,"Discharge Date":"2021-12-09","Test Results":"Normal"},{"Name":"Sandra Moore","Age":58,"Gender":"Male","Blood Type":"A-","Medical Condition":"Diabetes","Date of Admission":"2020-05-04","Doctor":"Heather Smith","Billing Amount":36992.27,"Room Number":413,"Discharge Date":"2020-05-13","Test Results":"Normal"},{"Name":"Linda Hernandez","Age":22,"Gender":"Male","Blood Type":"O+","Medical Condition":"Hypertension","Date of Admission":"2023-09-09","Doctor":"John Smith","Billing Amount":28051.5,"Room Number":157,"Discharge Date":"2023-09-23","Test Results":"Abnormal"}]
+;
+const DEPARTMENTS = ['Cardiology','General Medicine','Orthopedics','Pediatrics','Emergency','Neurology'];
+const SEVERITIES = ['Mild','Moderate','Severe','Critical'];
+const DEPT_BILL_BASE = {Cardiology:12000,'General Medicine':6000,Orthopedics:8500,Pediatrics:5000,Emergency:15000,Neurology:10500};
+const SEVERITY_MULTIPLIER = {Mild:1,Moderate:1.45,Severe:2.1,Critical:3.2};
+const RECEPTION_PROFILE = {receptionId:'R1001',name:'Hospital Reception',mobile:'9000000000',password:'reception123'};
+const CONDITION_MED = {Cancer:'Tamoxifen',Obesity:'Orlistat',Diabetes:'Metformin',Asthma:'Albuterol',Hypertension:'Lisinopril',Arthritis:'Ibuprofen'};
+const ADMIN_PROFILE = {adminId:'9381',name:'Samayamanthula Yaswanth',mobile:'9381629089'};
+const ADMIN_SESSION_TIMEOUT_MS = 10*60*1000;
+let admin2FA = {pending:false,otp:null,expiresAt:0,maskedMobile:'',demoOtp:'',adminId:null};
+let adminGrantErr='';
+let adminFailedAttempts = 0;
+let adminLockedUntil = 0;
+
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function deptFor(name){return DEPARTMENTS[hashStr(name)%DEPARTMENTS.length];}
+function uid(p){return p+Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-4);}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function monthOf(d){return d?d.slice(0,7):'—';}
+
+function loadState(){try{const raw=localStorage.getItem('mt_state_v2');if(raw)return JSON.parse(raw);}catch(e){}return null;}
+function seedState(){
+  const patients = DATASET.map((d,i)=>{
+    const pid='P'+(10001+i);
+    const rnd=mulberry32(hashStr(pid));
+    const vitals=[0,1,2].map(k=>({
+      date:d['Date of Admission'], // simplified label; distinct entries below vary values
+      bp: Math.round(110+rnd()*40)+'/'+Math.round(70+rnd()*25),
+      hr: Math.round(60+rnd()*40),
+      temp:(97.5+rnd()*2.5).toFixed(1),
+      sugar: Math.round(85+rnd()*100)
+    }));
+    return {
+      patientId:pid,name:d.Name,age:d.Age,gender:d.Gender,bloodGroup:d['Blood Type'],
+      email:'',phone:'',address:'',emergencyContact:'',password:'demo123',
+      condition:d['Medical Condition'],doctor:d.Doctor,department:deptFor(d.Doctor),
+      admission:d['Date of Admission'],discharge:d['Discharge Date'],billing:d['Medical Condition']?d['Billing Amount']:0,
+      room:d['Room Number'],testResult:d['Test Results'],signupDate:d['Date of Admission'],
+      notes:[],vitals:vitals,
+      diagnosisHistory:[{date:d['Date of Admission'],doctor:d.Doctor,diagnosis:d['Medical Condition']}],
+      labReports:[{date:d['Discharge Date']||d['Date of Admission'],test:'General Panel',result:d['Test Results']}],
+      prescriptions:[{date:d['Date of Admission'],doctor:d.Doctor,medicines:[{name:CONDITION_MED[d['Medical Condition']]||'Multivitamin',dosage:'1 tab',duration:'30 days'}],instructions:'Take after food.'}]
+    };
+  });
+  const doctorNames=[...new Set(DATASET.map(d=>d.Doctor))];
+  const doctors=doctorNames.map((n,i)=>{
+    const r=hashStr(n)%10;
+    const availability=r<7?'Available':(r<9?'Unavailable':'On Leave');
+    return {doctorId:'D'+(501+i),name:n,email:'',password:'demo123',department:deptFor(n),signupDate:null,
+      availability,workingHours:[{start:'09:00',end:'14:00'},{start:'16:00',end:'20:00'}]};
+  });
+  const admins=[{adminId:ADMIN_PROFILE.adminId,name:ADMIN_PROFILE.name,mobile:ADMIN_PROFILE.mobile,email:'admin@meditrack.local',password:'admin123',signupDate:null,securityLevel:'2FA'}];
+  const appointments=[
+    {id:uid('AP'),patientId:patients[0].patientId,patientName:patients[0].name,doctorName:patients[0].doctor,department:patients[0].department,date:todayStr(),time:'10:00',status:'Requested'},
+    {id:uid('AP'),patientId:patients[1].patientId,patientName:patients[1].name,doctorName:patients[1].doctor,department:patients[1].department,date:todayStr(),time:'11:30',status:'Confirmed'}
+  ];
+  const receptionists=[{receptionId:RECEPTION_PROFILE.receptionId,name:RECEPTION_PROFILE.name,mobile:RECEPTION_PROFILE.mobile,password:RECEPTION_PROFILE.password,role:'Reception'}];
+  const rooms=Array.from({length:40},(_,i)=>({roomNumber:101+i,bedNumber:'B1',status:'Available',patientId:null,department:null}));
+  return {patients,doctors,admins,receptionists,rooms,appointments,activity:[],notifications:[],systemVersion:7};
+}
+let state=loadState()||seedState();
+
+function normalizeState(){
+  state.patients=Array.isArray(state.patients)?state.patients:[];
+  state.doctors=Array.isArray(state.doctors)?state.doctors:[];
+  state.appointments=Array.isArray(state.appointments)?state.appointments:[];
+  state.activity=Array.isArray(state.activity)?state.activity:[];
+  state.notifications=Array.isArray(state.notifications)?state.notifications:[];
+  state.receptionists=Array.isArray(state.receptionists)?state.receptionists:[];
+  state.rooms=Array.isArray(state.rooms)?state.rooms:[];
+
+  state.doctors.forEach((d,i)=>{
+    d.doctorId=d.doctorId||('D'+(501+i));
+    d.department=d.department||deptFor(d.name||'Doctor');
+    if(!d.availability)d.availability=(hashStr(d.name||'Doctor')%10<8?'Available':'Unavailable');
+    d.workingHours=Array.isArray(d.workingHours)&&d.workingHours.length ? d.workingHours : [{start:'09:00',end:'14:00'},{start:'16:00',end:'20:00'}];
+  });
+  if(!state.receptionists.length)state.receptionists=[{...RECEPTION_PROFILE}];
+  if(!state.rooms.length)state.rooms=Array.from({length:40},(_,i)=>({roomNumber:101+i,bedNumber:'B1',status:'Available',patientId:null,department:null}));
+  state.rooms.forEach(r=>{r.status=r.status||'Available';r.bedNumber=r.bedNumber||'B1';r.patientId=r.patientId||null;});
+  const activeRoomIds=new Set();
+  state.patients.forEach(p=>{
+    if(!p.room)return;
+    const room=state.rooms.find(r=>String(r.roomNumber)===String(p.room));
+    if(!room)return;
+    if(p.registrationStatus==='Admitted' && p.paymentStatus==='Paid'){room.status='Occupied';room.patientId=p.patientId;room.department=p.department||null;activeRoomIds.add(String(room.roomNumber));}
+    else if(['Awaiting Payment','Payment Completed - Awaiting Bed Assignment','Bed Requested'].includes(p.registrationStatus)){room.status='Reserved';room.patientId=p.patientId;room.department=p.department||null;activeRoomIds.add(String(room.roomNumber));}
+  });
+  state.rooms.forEach(r=>{if(!activeRoomIds.has(String(r.roomNumber)) && r.status!=='Occupied'){r.status='Available';r.patientId=null;}});
+  // New patient workflow fields. Legacy dataset patients remain historical/admitted records.
+  state.patients.forEach(p=>{
+    if(p.registrationStatus===undefined){
+      p.registrationStatus='Admitted';
+      p.paymentStatus=p.billing?'Paid':'Not Generated';
+      p.severity=p.severity||'Moderate';
+      p.bed=p.bed||null;
+      p.receipt=p.receipt||null;
+    }
+  });
+  if(state.systemVersion<5){
+    // Freshen the demo scheduling state so stale localStorage cannot make every doctor
+    // appear available/unavailable incorrectly. Doctors start Available and their slots
+    // are then constrained by working hours and existing appointments.
+    state.doctors.forEach(d=>{d.availability='Available';d.workingHours=[{start:'09:00',end:'14:00'},{start:'16:00',end:'20:00'}];});
+    // Only patients created through the reception billing workflow receive daily bed charges.
+    // Historical DATASET records are kept as historical records and are not charged retroactively.
+    state.patients.forEach(p=>{
+      if(p.billingReceipt && p.registrationStatus==='Admitted'){
+        p.bedRate=bedRateForSeverity(p.severity||'Mild');
+        p.baseBill=Number(p.baseBill??p.billing??0);
+        p.admission=p.admission||todayStr();
+      }
+    });
+    state.systemVersion=5;
+  }
+
+  if(state.systemVersion<6){
+    // v6 billing/payment migration: enforce the current bed tariff and UPI payment destination.
+    state.patients.forEach(p=>{
+      if(p.registrationStatus==='Admitted'){
+        p.bedRate=bedRateForSeverity(p.severity||'Mild');
+        p.baseBill=Number(p.baseBill??p.billing??0);
+        p.billing=currentBillAmount(p);
+      }
+      p.paymentUpiId=p.paymentUpiId||'9381629089@ptyes';
+      p.paymentReference=p.paymentReference||'';
+    });
+    state.systemVersion=6;
+  }
+
+  if(state.systemVersion<7){
+    // v7 migration: existing patients created through the live reception workflow
+    // must use the current severity tariff instead of the old department-based tariff.
+    state.patients.forEach(p=>{
+      p.paymentUpiId=p.paymentUpiId||'9381629089@ptyes';
+      p.paymentReference=p.paymentReference||'';
+      if(p.billingReceipt){
+        const tariff=calculateBill(p.department||'',p.severity||'Mild');
+        if(p.registrationStatus==='Admitted'){
+          // Keep an already-recorded payment amount/history intact; only normalize the
+          // base tariff for the current demo workflow when it has not been paid yet.
+          if(p.paymentStatus!=='Paid'){
+            p.baseBill=tariff;
+            p.billing=currentBillAmount(p);
+          }
+          p.bedRate=bedRateForSeverity(p.severity||'Mild');
+        }else if(['Awaiting Payment','Payment Completed - Awaiting Bed Assignment','Bed Requested'].includes(p.registrationStatus)){
+          p.baseBill=tariff;
+          p.billing=tariff;
+          if(p.paymentStatus!=='Paid')p.amountPaid=0;
+        }
+      }
+    });
+    state.systemVersion=7;
+  }
+
+  if(state.systemVersion<8){
+    // v8 migration: force the current severity tariff onto every live workflow
+    // patient so browsers that already ran v7 cannot retain the old ₹5,000+ demo tariff.
+    state.patients.forEach(p=>{
+      p.paymentUpiId=p.paymentUpiId||'9381629089@ptyes';
+      p.paymentReference=p.paymentReference||'';
+      if(!p.billingReceipt)return;
+      const liveStatuses=['Registered - Awaiting Reception','Awaiting Payment','Payment Completed - Awaiting Bed Assignment','Bed Requested','Admitted'];
+      if(!liveStatuses.includes(p.registrationStatus))return;
+      const tariff=calculateBill(p.department||'',p.severity||'Mild');
+      if(p.registrationStatus==='Admitted'){
+        p.bedRate=bedRateForSeverity(p.severity||'Mild');
+        p.baseBill=tariff;
+        p.billing=currentBillAmount(p);
+        const paid=Number(p.amountPaid||0);
+        p.paymentStatus=paid>=Number(p.billing) ? 'Paid' : 'Due';
+      }else{
+        p.baseBill=tariff;
+        p.billing=tariff;
+        if(p.paymentStatus!=='Paid')p.amountPaid=0;
+      }
+    });
+    state.systemVersion=8;
+    save();
+  }
+
+  // Keep the primary administrator and any administrators explicitly authorized by an existing admin.
+  const existingAdmins=Array.isArray(state.admins)?state.admins:[];
+  const primaryExisting=existingAdmins.find(x=>x.adminId===ADMIN_PROFILE.adminId)||existingAdmins[0];
+  const adminPassword=primaryExisting&&primaryExisting.password?primaryExisting.password:'admin123';
+  const authorizedAdmins=existingAdmins.filter(x=>x&&x.adminId&&x.adminId!==ADMIN_PROFILE.adminId);
+  state.admins=[{
+    adminId:ADMIN_PROFILE.adminId,
+    name:ADMIN_PROFILE.name,
+    mobile:ADMIN_PROFILE.mobile,
+    email:primaryExisting?.email||'admin@meditrack.local',
+    password:adminPassword,
+    signupDate:primaryExisting?.signupDate||null,
+    securityLevel:'2FA',
+    role:'Primary Administrator',
+    grantedBy:null
+  },...authorizedAdmins.map(x=>({...x,securityLevel:'2FA',role:x.role||'Authorized Administrator'}))];
+  state.admins.forEach((a,i)=>{a.role=a.role||(i===0?'Primary Administrator':'Authorized Administrator');a.securityLevel='2FA';});
+  state.adminSequence=Math.max(9381,...state.admins.map(a=>parseInt(String(a.adminId).replace(/\D/g,''),10)||0));
+}
+normalizeState();
+
+function save(){try{localStorage.setItem('mt_state_v2',JSON.stringify(state));}catch(e){}}
+save();
+function logActivity(text){state.activity.unshift({text,ts:new Date().toISOString()});state.activity=state.activity.slice(0,50);}
+function notify(role,id,text){state.notifications.unshift({id:uid('N'),role,uid:id,text,ts:new Date().toISOString(),read:false});}
+
+let session=null,view='landing';
+let authRole=null,authTab='login',authErr='';
+let patientTab='overview',doctorTab='patients',adminTab='overview';
+let selectedPatientId=null,fromDoctorSearch=false;
+let bookDept=null,bookDate=null,bookDoctor=null;
+let downloadsApi=null;
+(async()=>{try{if(window.claude){downloadsApi=await window.claude.use('downloads');}}catch(e){}})();
+window.addEventListener('storage',()=>{const fresh=loadState();if(fresh){state=fresh;render();}});
+
+const app=document.getElementById('app');
+function render(){
+  accrueBedCharges();
+  if(session?.role==='admin' && Date.now()-(session.lastActivity||0)>ADMIN_SESSION_TIMEOUT_MS){
+    session=null; view='landing'; authErr='Admin session expired after 10 minutes. Please authenticate again.';
+  }
+  let html='';
+  if(view==='landing')html=renderLanding();
+  else if(view==='auth')html=renderAuth();
+  else if(view==='patientHome')html=renderPatientHome();
+  else if(view==='doctorHome')html=renderDoctorHome();
+  else if(view==='adminHome')html=renderAdminHome();
+  else if(view==='receptionHome')html=renderReceptionHome();
+  app.innerHTML=html;
+  afterRender();
+}
+function liveDateTime(){return new Date().toLocaleString('en-IN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true,timeZone:'Asia/Kolkata'})+' IST';}
+function topbar(roleLabel,name){
+  return `<div class="topbar"><div class="brand">🏥 MediTrack <span class="pill">v6</span></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+  <span class="live-clock" data-live-clock>${liveDateTime()}</span>
+  ${roleLabel?`<span class="pill">${roleLabel}${name?': '+name:''}</span>`:''}
+  ${session?`<button class="btn btn-ghost btn-sm" id="logoutBtn">Log out</button>`:''}</div></div>`;
+}
+function subtabBar(tabs,current){
+  return `<div class="subtabs">${tabs.map(t=>`<button class="subtab ${current===t.key?'active':''}" data-sub="${t.key}">${t.label}</button>`).join('')}</div>`;
+}
+function renderLanding(){
+  return `${topbar()}<div class="wrap"><div style="text-align:center;margin:26px 0 30px">
+  <h1 style="font-size:26px">Hospital Patient Data Analysis System</h1>
+  <p class="muted">Select your portal — each role has its own sign up and login.</p></div>
+  <div class="grid grid-3">
+    <div class="role-card" data-role="patient"><div class="emoji">👤</div><h3>Patient</h3><p class="muted">Records, appointments, prescriptions, reports</p></div>
+    <div class="role-card" data-role="doctor"><div class="emoji">👨‍⚕️</div><h3>Doctor</h3><p class="muted">Assigned patients, diagnosis, prescriptions</p></div>
+    <div class="role-card" data-role="admin"><div class="emoji">🛡️</div><h3>Admin</h3><p class="muted">Hospital-wide stats, users, analytics</p></div>
+    <div class="role-card" data-role="reception"><div class="emoji">🧑‍💼</div><h3>Reception</h3><p class="muted">Patient verification, room, doctor & bed assignment</p></div>
+  </div><p class="footer-note">Demo prototype — data stored in this browser (syncs live across tabs on the same device).</p></div>`;
+}
+function fieldsFor(role,tab){
+  if(role==='admin'){
+    if(tab==='login')return `<div class="security-card">
+      <div class="admin-badge">🛡️ Single Administrator · 2-Step Verification</div>
+      <label>Admin ID</label><input id="f_adminId" inputmode="numeric" maxlength="4" placeholder="Enter 4-digit Admin ID">
+      <label>Password</label><input id="f_pass" type="password" placeholder="Admin password">
+      <p class="muted">Only the registered administrator can enter this portal. A second verification step is required after the password.</p>
+    </div>`;
+    if(tab==='otp')return `<div class="security-card">
+      <div class="admin-badge">🔐 Step 2 of 2 · Mobile verification</div>
+      <p>OTP sent to <b>${admin2FA.maskedMobile||'registered mobile'}</b></p>
+      <label>6-digit OTP</label><input id="f_otp" inputmode="numeric" maxlength="6" placeholder="Enter OTP">
+      ${admin2FA.demoOtp?`<div class="otp-box">${admin2FA.demoOtp}</div><p class="muted">Prototype mode: this OTP is displayed locally because this HTML file has no SMS gateway. In production, send it through an SMS provider instead.</p>`:''}
+    </div>`;
+    return `<div class="security-card"><b>🔐 Admin access is controlled by an existing administrator.</b><p class="muted">New administrators cannot self-register. The existing admin must sign in first and grant access from <b>Administrators</b> in the protected Admin Portal.</p></div>`;
+  }
+  if(tab==='login')return `<label>Email</label><input id="f_email" type="email"><label>Password</label><input id="f_pass" type="password">`;
+  if(role==='patient')return `<div class="grid grid-2">
+    <div><label>Full name</label><input id="f_name"></div><div><label>Age</label><input id="f_age" type="number" min="0"></div>
+    <div><label>Gender</label><select id="f_gender"><option>Female</option><option>Male</option><option>Other</option></select></div>
+    <div><label>Blood group</label><select id="f_blood"><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select></div>
+    <div><label>Phone</label><input id="f_phone"></div><div><label>Email</label><input id="f_email" type="email"></div></div>
+    <label>Address</label><input id="f_address"><label>Emergency contact</label><input id="f_emergency"><label>Password</label><input id="f_pass" type="password">`;
+  if(role==='reception')return `<label>Reception ID</label><input id="f_receptionId" value="R1001"><label>Password</label><input id="f_pass" type="password" placeholder="Reception password"><div class="security-card"><b>Reception access</b><p class="muted">Reception controls room/doctor assignment and can assign a bed only after the patient's bill is paid.</p></div>`;
+  if(role==='doctor')return `<div class="grid grid-2"><div><label>Full name</label><input id="f_name"></div>
+    <div><label>Department</label><select id="f_spec">${DEPARTMENTS.map(d=>`<option>${d}</option>`).join('')}</select></div>
+    <div><label>Email</label><input id="f_email" type="email"></div><div><label>Password</label><input id="f_pass" type="password"></div></div>`;
+}
+
+function renderAuth(){
+  const roleLabel={patient:'Patient portal',doctor:'Doctor portal',admin:'Admin portal',reception:'Reception portal'}[authRole];
+  if(authRole==='admin' && admin2FA.pending){
+    if(authRole==='reception')return `${topbar()}<div class="center-wrap"><div class="card"><h2>${roleLabel}</h2>${fieldsFor('reception','login')}
+    ${authErr?`<div class="err">${authErr}</div>`:''}<button class="btn btn-primary" id="submitAuth" style="width:100%;margin-top:14px">Sign in to Reception</button><button class="btn btn-outline" id="backBtn" style="width:100%;margin-top:8px">← Back to role select</button></div></div>`;
+  return `${topbar()}<div class="center-wrap"><div class="card"><h2>${roleLabel}</h2>
+      ${fieldsFor('admin','otp')}
+      ${authErr?`<div class="err">${authErr}</div>`:''}
+      <button class="btn btn-primary" id="submitAuth" style="width:100%;margin-top:14px">Verify &amp; enter admin portal</button>
+      <button class="btn btn-outline" id="backBtn" style="width:100%;margin-top:8px">← Cancel</button>
+    </div></div>`;
+  }
+  if(authRole==='admin'){
+    return `${topbar()}<div class="center-wrap"><div class="card"><h2>${roleLabel}</h2>
+      ${fieldsFor('admin','login')}
+      ${authErr?`<div class="err">${authErr}</div>`:''}
+      <button class="btn btn-primary" id="submitAuth" style="width:100%;margin-top:14px">Continue to verification</button>
+      <div class="security-card" style="margin-top:12px"><b>Need a new admin account?</b><p class="muted">An existing administrator must grant access. New admins cannot register themselves.</p></div>
+      <button class="btn btn-outline" id="backBtn" style="width:100%;margin-top:8px">← Back to role select</button>
+    </div></div>`;
+  }
+  return `${topbar()}<div class="center-wrap"><div class="card"><h2>${roleLabel}</h2>
+    <div class="tabs"><button class="tab ${authTab==='login'?'active':''}" data-tab="login">Log in</button><button class="tab ${authTab==='signup'?'active':''}" data-tab="signup">Sign up</button></div>
+    <div id="authFields">${fieldsFor(authRole,authTab)}</div>${authErr?`<div class="err">${authErr}</div>`:''}
+    <button class="btn btn-primary" id="submitAuth" style="width:100%;margin-top:14px">${authTab==='login'?'Log in':'Create account'}</button>
+    <button class="btn btn-outline" id="backBtn" style="width:100%;margin-top:8px">← Back to role select</button></div></div>`;
+}
+
+// ---------- shared computations ----------
+function computeDistributions(){
+  const conds={},blood={},gender={},testRes={},dept={},ageBuckets={'0-18':0,'19-30':0,'31-45':0,'46-60':0,'60+':0},admMonth={};
+  state.patients.forEach(p=>{
+    conds[p.condition]=(conds[p.condition]||0)+1;
+    blood[p.bloodGroup]=(blood[p.bloodGroup]||0)+1;
+    gender[p.gender]=(gender[p.gender]||0)+1;
+    testRes[p.testResult]=(testRes[p.testResult]||0)+1;
+    dept[p.department]=(dept[p.department]||0)+1;
+    const a=p.age||0; const k=a<=18?'0-18':a<=30?'19-30':a<=45?'31-45':a<=60?'46-60':'60+'; ageBuckets[k]++;
+    const m=monthOf(p.admission); admMonth[m]=(admMonth[m]||0)+1;
+  });
+  return {conds,blood,gender,testRes,dept,ageBuckets,admMonth};
+}
+function medicalTimeline(p){
+  const items=[];
+  if(p.admission)items.push({date:p.admission,type:'Admission',text:`Admitted — Room ${p.room||'—'}`});
+  (p.diagnosisHistory||[]).forEach(d=>items.push({date:d.date,type:'Diagnosis',text:`${d.diagnosis} (Dr. ${d.doctor})`}));
+  (p.vitals||[]).forEach(v=>items.push({date:v.date,type:'Vitals',text:`BP ${v.bp} · HR ${v.hr} bpm · Temp ${v.temp}°F · Sugar ${v.sugar} mg/dL`}));
+  (p.prescriptions||[]).forEach(pr=>items.push({date:pr.date,type:'Prescription',text:pr.medicines.map(m=>`${m.name} ${m.dosage} (${m.duration})`).join(', ')}));
+  (p.labReports||[]).forEach(l=>items.push({date:l.date,type:'Lab Report',text:`${l.test}: ${l.result}`}));
+  if(p.discharge)items.push({date:p.discharge,type:'Discharge',text:`Discharged — result ${p.testResult}`});
+  return items.filter(i=>i.date).sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+// ---------- doctor availability & slot booking ----------
+function timeToMinutes(t){const [h,m]=t.split(':').map(Number);return h*60+m;}
+function minutesTo24(m){const h=Math.floor(m/60).toString().padStart(2,'0');const mm=(m%60).toString().padStart(2,'0');return `${h}:${mm}`;}
+function displayTime(t){const [h,m]=t.split(':').map(Number);const ap=h>=12?'PM':'AM';let hh=h%12;if(hh===0)hh=12;return `${hh}:${m.toString().padStart(2,'0')} ${ap}`;}
+function generateSlots(doctor){
+  const slots=[];
+  (doctor.workingHours||[]).forEach(shift=>{
+    if(!shift||!shift.start||!shift.end)return;
+    let s=timeToMinutes(shift.start),e=timeToMinutes(shift.end);
+    for(let m=s;m<e;m+=30)slots.push(minutesTo24(m));
+  });
+  return slots;
+}
+function bookedSlotsFor(doctorName,date){return new Set(state.appointments.filter(a=>a.doctorName===doctorName&&a.date===date&&a.status!=='Cancelled').map(a=>a.time));}
+function availableSlotsForDoctorDate(doctor,date){
+  if(!doctor)return [];
+  if(doctor.availability==='On Leave'||doctor.availability==='Unavailable')return [];
+  const slots=generateSlots(doctor);const booked=bookedSlotsFor(doctor.name,date);
+  let free=slots.filter(s=>!booked.has(s));
+  if(date===todayStr()){
+    const now=new Date();const nowMin=now.getHours()*60+now.getMinutes();
+    free=free.filter(s=>timeToMinutes(s)>nowMin);
+  }
+  return free;
+}
+function firstBookableDate(){
+  const candidates=[todayStr()];
+  const d=new Date();d.setDate(d.getDate()+1);candidates.push(d.toISOString().slice(0,10));
+  for(const date of candidates){
+    if(state.doctors.some(dd=>availableSlotsForDoctorDate(dd,date).length))return date;
+  }
+  return todayStr();
+}
+function doctorStatusForDate(doctor,date){
+  if(doctor.availability==='On Leave')return {status:'unavailable',label:'🔴 On Leave'};
+  if(doctor.availability==='Unavailable')return {status:'unavailable',label:'🔴 Unavailable'};
+  const total=generateSlots(doctor).length;
+  if(total===0)return {status:'unavailable',label:'🔴 No hours set'};
+  const free=availableSlotsForDoctorDate(doctor,date).length;
+  if(free===0)return {status:'unavailable',label:'🔴 Fully booked'};
+  if(free/total<=0.3)return {status:'busy',label:'🟡 Busy'};
+  return {status:'available',label:'🟢 Available'};
+}
+function nextAvailableAcrossDays(doctor,fromDate){
+  let d=new Date(fromDate+'T00:00:00');
+  for(let i=0;i<8;i++){
+    const dateStr=d.toISOString().slice(0,10);
+    const free=availableSlotsForDoctorDate(doctor,dateStr);
+    if(free.length)return {date:dateStr,time:free[0]};
+    d.setDate(d.getDate()+1);
+  }
+  return null;
+}
+function renderBookingSection(p){
+  if(!bookDept)bookDept=DEPARTMENTS[0];
+  if(!bookDate)bookDate=firstBookableDate();
+  const deptDoctors=state.doctors.filter(dd=>dd.department===bookDept);
+  let html=`<div class="card"><h3>Book an appointment</h3><label>Department</label><select id="bk_dept">${DEPARTMENTS.map(d=>`<option ${bookDept===d?'selected':''}>${d}</option>`).join('')}</select>
+  <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Doctor</th><th>Status</th><th>Next available</th><th></th></tr></thead><tbody>`;
+  if(!deptDoctors.length)html+=`<tr><td colspan="4" class="muted">No doctors in this department yet.</td></tr>`;
+  deptDoctors.forEach(dd=>{
+    const st=doctorStatusForDate(dd,bookDate);
+    const nextA=st.status==='available'?null:nextAvailableAcrossDays(dd,bookDate);
+    html+=`<tr><td>Dr. ${dd.name}</td><td>${st.label}</td>
+      <td>${st.status==='available'?'—':(nextA?`${nextA.date===todayStr()?'Today':nextA.date} ${displayTime(nextA.time)}`:'None in 7 days')}</td>
+      <td><button class="btn btn-sm btn-outline" data-slots="${dd.name}">View slots</button></td></tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  if(bookDoctor){const doc=state.doctors.find(dd=>dd.name===bookDoctor);if(doc)html+=renderSlotPicker(doc);}
+  html+=`</div>`;
+  return html;
+}
+function renderSlotPicker(doc){
+  const free=availableSlotsForDoctorDate(doc,bookDate);
+  const all=generateSlots(doc);
+  let html=`<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+    <div class="flex-between"><h3 style="margin:0">Dr. ${doc.name} — ${doc.department}</h3><input type="date" id="bk_date" value="${bookDate}" min="${todayStr()}" style="width:auto"></div>`;
+  if(doc.availability==='On Leave'||doc.availability==='Unavailable'){
+    html+=`<p class="muted" style="margin-top:8px">Dr. ${doc.name} is ${doc.availability.toLowerCase()} on ${bookDate===todayStr()?'today':bookDate}.</p>`+renderAlternatives(doc);
+  } else if(!free.length){
+    html+=`<p class="muted" style="margin-top:8px">Dr. ${doc.name} is fully booked ${bookDate===todayStr()?'today':'on '+bookDate}.</p>`+renderAlternatives(doc);
+  } else {
+    html+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">`+all.map(s=>{
+      const isFree=free.includes(s);
+      return `<button class="btn btn-sm ${isFree?'btn-outline':'btn-danger'}" ${isFree?`data-book="${doc.name}|${s}"`:'disabled'} style="opacity:${isFree?1:.55}">${displayTime(s)} ${isFree?'🟢':'🔴'}</button>`;
+    }).join('')+`</div>`;
+  }
+  return html+`</div>`;
+}
+function renderAlternatives(doc){
+  const nextA=nextAvailableAcrossDays(doc,bookDate);
+  const alts=state.doctors.filter(dd=>dd.department===doc.department&&dd.name!==doc.name)
+    .map(dd=>({dd,slot:availableSlotsForDoctorDate(dd,bookDate)[0]})).filter(x=>x.slot);
+  let html='';
+  if(nextA)html+=`<div class="alert info" style="margin-top:8px">Next available with Dr. ${doc.name}: ${nextA.date===todayStr()?'Today':nextA.date} at ${displayTime(nextA.time)}. <button class="btn btn-sm btn-primary" data-book="${doc.name}|${nextA.time}" data-bookdate="${nextA.date}" style="margin-left:8px">Book this</button></div>`;
+  if(alts.length){
+    html+=`<p class="muted" style="margin-top:10px">Other doctors available ${bookDate===todayStr()?'today':'on '+bookDate}:</p>`;
+    alts.forEach(x=>{html+=`<div class="flex-between" style="margin-bottom:6px"><span>Dr. ${x.dd.name} — ${displayTime(x.slot)}</span><button class="btn btn-sm btn-outline" data-book="${x.dd.name}|${x.slot}">Book</button></div>`;});
+  }
+  if(!nextA&&!alts.length)html+=`<p class="muted" style="margin-top:8px">No alternative doctors currently free in this department.</p>`;
+  return html;
+}
+
+// ---------- PATIENT ----------
+function renderPatientHome(){
+  const p=state.patients.find(x=>x.patientId===session.id);
+  const tabs=[{key:'overview',label:'Overview'},{key:'doctors',label:'Find a Doctor'},{key:'appointments',label:'Appointments'},{key:'billing',label:'Billing & Receipt'},{key:'history',label:'Medical History'},
+    {key:'prescriptions',label:'Prescriptions'},{key:'labs',label:'Lab Reports'},{key:'profile',label:'Profile'},{key:'notifications',label:'Notifications'}];
+  let body='';
+  if(patientTab==='overview'){
+    const tl=medicalTimeline(p);
+    body=`<div class="grid grid-4" style="margin:16px 0">
+      <div class="stat"><div class="num">${state.appointments.filter(a=>a.patientId===p.patientId).length}</div><div class="lbl">Appointments</div></div>
+      <div class="stat"><div class="num">${(p.prescriptions||[]).length}</div><div class="lbl">Prescriptions</div></div>
+      <div class="stat"><div class="num">${(p.labReports||[]).length}</div><div class="lbl">Lab reports</div></div>
+      <div class="stat"><div class="num">${tl.length}</div><div class="lbl">History entries</div></div></div>
+    <div class="grid grid-2">
+      <div class="card"><h3>Recent health information</h3><table>
+        <tr><td>Blood group</td><td>${p.bloodGroup}</td></tr><tr><td>Age / Gender</td><td>${p.age} / ${p.gender}</td></tr>
+        <tr><td>Department</td><td>${p.department||'Awaiting Reception'}</td></tr><tr><td>Billing amount</td><td>${p.billing?`₹${(p.billing||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`:'Not generated'}</td></tr><tr><td>Payment status</td><td><span class="tag ${p.paymentStatus==='Paid'?'ok':p.paymentStatus==='Pending'?'warn':'info'}">${p.paymentStatus||'Not Generated'}</span></td></tr>${p.bedRate?`<tr><td>Bed charge</td><td>₹${p.bedRate}/day</td></tr><tr><td>Current bill</td><td>₹${currentBillAmount(p).toLocaleString('en-IN',{maximumFractionDigits:2})}</td></tr>`:''}</table></div>
+      <div class="card"><h3>Current condition</h3><p><span class="tag ${p.testResult==='Normal'?'ok':(p.testResult==='Abnormal'?'warn':'info')}">${p.testResult||'Pending'}</span></p>
+        <p class="muted">Diagnosis: <b>${p.condition||'—'}</b><br>Attending doctor: <b>${p.doctor||'Unassigned'}</b></p>
+        <p class="muted">Emergency contact: ${p.emergencyContact||'Not set'}</p></div></div>`;
+  } else if(patientTab==='doctors'){
+    const byDept={}; DEPARTMENTS.forEach(dp=>byDept[dp]=state.doctors.filter(dd=>dd.department===dp));
+    body=`<div class="card"><div class="searchrow"><input id="docDirSearch" placeholder="Search by name or department..."></div></div>
+    <div class="grid grid-2" id="doctorDirectory">${DEPARTMENTS.map(dp=>{
+      const list=byDept[dp];
+      return list.length?list.map(dd=>{
+        const load=state.patients.filter(pp=>pp.doctor===dd.name).length;
+        const st=doctorStatusForDate(dd,todayStr());
+        return `<div class="card" data-doc-name="${dd.name.toLowerCase()}" data-doc-dept="${dp.toLowerCase()}">
+          <div class="flex-between"><h3>Dr. ${dd.name}</h3><span class="tag info">${dp}</span></div>
+          <p class="muted">${st.label} today · Currently treating ${load} patient(s)</p>
+          <button class="btn btn-primary btn-sm" data-bookdoc="${dd.name}" data-bookdept="${dp}">View availability &amp; book</button></div>`;
+      }).join(''):'';
+    }).join('')||'<p class="muted">No doctors registered yet.</p>'}</div>`;
+  } else if(patientTab==='appointments'){
+    const mine=state.appointments.filter(a=>a.patientId===p.patientId).sort((a,b)=>b.date.localeCompare(a.date));
+    body=renderBookingSection(p)+
+    `<div class="card"><h3>My appointments</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Time</th><th>Doctor</th><th>Dept</th><th>Status</th></tr></thead>
+    <tbody>${mine.length?mine.map(a=>`<tr><td>${a.date}</td><td>${displayTime(a.time)}</td><td>${a.doctorName}</td><td>${a.department}</td><td><span class="tag ${a.status==='Confirmed'?'ok':a.status==='Cancelled'?'warn':a.status==='Completed'?'info':'pend'}">${a.status}</span></td></tr>`).join(''):'<tr><td colspan="5" class="muted">No appointments yet.</td></tr>'}</tbody></table></div></div>`;
+  } else if(patientTab==='billing'){
+    const generated=!!p.billingReceipt; const paid=p.paymentStatus==='Paid';
+    body=`<div class="grid grid-2"><div class="card"><h3>💳 Hospital Bill</h3>${generated?`<p><span class="tag info">${p.registrationStatus||'Bill generated'}</span></p><table><tr><td>Department</td><td>${p.department||'—'}</td></tr><tr><td>Severity</td><td>${p.severity||'—'}</td></tr><tr><td>Doctor</td><td>${p.doctor||'—'}</td></tr><tr><td>Room</td><td>${p.room||'—'}</td></tr><tr><td>Amount due</td><td><b data-live-billing="${p.patientId}">₹${currentBillAmount(p).toLocaleString('en-IN',{maximumFractionDigits:2})}</b></td></tr><tr><td>Payment</td><td><span class="tag ${paid?'ok':'warn'}" data-live-payment-status="${p.patientId}">${p.paymentStatus||'Pending'}</span></td></tr>${p.bedRate?`<tr><td>Bed charge</td><td>₹${p.bedRate.toLocaleString('en-IN')}/day · ${admittedBedDays(p)} day(s)</td></tr>`:''}</table>${!paid?`<div class="alert info" style="margin-top:12px"><b>Scan & Pay with UPI</b><br><span class="muted">Scan the QR code with Google Pay, PhonePe, Paytm or another UPI app. The QR contains the exact amount due.</span></div><div style="display:flex;justify-content:center;margin:14px 0"><div id="upiQr" style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;min-width:244px;min-height:244px;display:flex;align-items:center;justify-content:center"></div></div><div style="text-align:center;margin-bottom:10px"><b>₹${currentBillAmount(p).toLocaleString('en-IN',{maximumFractionDigits:2})}</b><br><span class="muted">UPI ID: 9381629089@ptyes</span></div><button class="btn btn-primary" id="openUpiBtn" style="margin-top:4px">📲 Open UPI Payment App</button><div style="margin-top:10px"><label>Payment confirmation</label><button class="btn btn-primary" id="confirmPaymentBtn" style="margin-top:8px;width:100%">✅ Payment Completed</button><p class="muted" style="margin:8px 0 0;font-size:12px">After you finish the payment in your UPI app, return here and tap the button above. This demo marks the payment as Paid; it does not verify the transaction with the bank.</p></div>`:`<div class="alert info" style="margin-top:12px">Payment recorded to <b>9381629089@ptyes</b>. Reference: <b>${p.paymentReference||'—'}</b><br>Receipt No: <b>${p.billingReceipt}</b></div>${p.registrationStatus==='Payment Completed - Awaiting Bed Assignment'?`<button class="btn btn-primary" id="requestBedBtn" style="margin-top:10px">🛏️ Request Bed Assignment</button>`:p.registrationStatus==='Bed Requested'?`<div class="alert info" style="margin-top:10px"><b>Bed request sent.</b> Reception will assign your bed.</div>`:p.registrationStatus==='Admitted'?`<div class="alert info" style="margin-top:10px"><b>Bed assigned:</b> Room ${p.room}, ${p.bed||'B1'}</div>`:''}`}`:`<div class="alert info"><b>No bill has been generated yet.</b><br>The bill is created only after Reception assigns your department, doctor and room.</div>`}</div>
+      <div class="card"><h3>Receipt</h3>${p.billingReceipt?`<div class="security-card"><b>MediTrack Hospital</b><p>Receipt No: ${p.billingReceipt}</p><p>Patient: ${p.name} (${p.patientId})</p><p>Current amount: ₹${currentBillAmount(p).toLocaleString('en-IN',{maximumFractionDigits:2})}</p><p>Payment UPI: <b>9381629089@ptyes</b></p><p>Status: <b>${p.paymentStatus}</b></p><p class="muted">Generated: ${p.billGeneratedAt||'—'}</p></div>`:'<p class="muted">Receipt will appear here after Reception creates the bill.</p>'}</div></div>`;
+  } else if(patientTab==='history'){
+    const tl=medicalTimeline(p);
+    body=`<div class="card"><div class="flex-between"><h3>Complete medical history</h3><button class="btn btn-outline btn-sm" id="downloadSummary">📄 Download summary</button></div>
+      <div class="timeline">${tl.map(i=>`<div class="item"><div class="muted">${i.date} · ${i.type}</div><div>${i.text}</div></div>`).join('')||'<p class="muted">No records yet.</p>'}</div></div>`;
+  } else if(patientTab==='prescriptions'){
+    body=`<div class="card"><h3>Prescriptions</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Doctor</th><th>Medicine</th><th>Dosage</th><th>Duration</th><th>Instructions</th></tr></thead>
+    <tbody>${(p.prescriptions||[]).flatMap(pr=>pr.medicines.map(m=>`<tr><td>${pr.date}</td><td>${pr.doctor}</td><td>${m.name}</td><td>${m.dosage}</td><td>${m.duration}</td><td>${pr.instructions||'—'}</td></tr>`)).join('')||'<tr><td colspan="6" class="muted">None yet.</td></tr>'}</tbody></table></div></div>`;
+  } else if(patientTab==='labs'){
+    body=`<div class="card"><h3>Lab reports</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Test</th><th>Result</th></tr></thead>
+    <tbody>${(p.labReports||[]).map(l=>`<tr><td>${l.date}</td><td>${l.test}</td><td><span class="tag ${l.result==='Normal'?'ok':'warn'}">${l.result}</span></td></tr>`).join('')||'<tr><td colspan="3" class="muted">None yet.</td></tr>'}</tbody></table></div></div>`;
+  } else if(patientTab==='profile'){
+    body=`<div class="card"><h3>Edit profile</h3><div class="grid grid-2">
+      <div><label>Name</label><input value="${p.name}" disabled></div><div><label>Email (login id)</label><input value="${p.email||'—'}" disabled></div>
+      <div><label>Phone</label><input id="pf_phone" value="${p.phone||''}"></div><div><label>Address</label><input id="pf_address" value="${p.address||''}"></div>
+      <div><label>Blood group</label><select id="pf_blood">${['O+','O-','A+','A-','B+','B-','AB+','AB-'].map(b=>`<option ${p.bloodGroup===b?'selected':''}>${b}</option>`).join('')}</select></div>
+      <div><label>Emergency contact</label><input id="pf_emergency" value="${p.emergencyContact||''}"></div></div>
+      <button class="btn btn-primary" id="saveProfile" style="margin-top:10px">Save changes</button></div>`;
+  } else if(patientTab==='notifications'){
+    const mine=state.notifications.filter(n=>n.role==='patient'&&n.uid===p.patientId);
+    body=`<div class="card"><h3>Notifications</h3>${mine.length?mine.map(n=>`<div class="notif ${n.read?'':'unread'}" data-nid="${n.id}">${n.text}<div class="muted">${new Date(n.ts).toLocaleString()}</div></div>`).join(''):'<p class="muted">No notifications.</p>'}</div>`;
+  }
+  return `${topbar('Patient',p.name)}<div class="wrap"><h2>Welcome, ${p.name.toUpperCase()}</h2><p class="muted">Patient ID: ${p.patientId}</p>${subtabBar(tabs,patientTab)}${body}</div>`;
+}
+
+
+// ---------- RECEPTION / BILLING ----------
+function calculateBill(dept,severity){
+  // Hospital bill tariff requested by the project: Mild/Moderate ₹100, Severe/Critical ₹400.
+  return (severity==='Severe'||severity==='Critical') ? 400 : 100;
+}
+function bedRateForSeverity(severity){return (severity==='Severe'||severity==='Critical')?400:100;}
+function admittedBedDays(p){
+  if(!p||!p.admission||!p.bedRate)return 0;
+  const start=new Date(p.admission+'T00:00:00');
+  if(Number.isNaN(start.getTime()))return 0;
+  const now=new Date();
+  const elapsed=Math.floor((new Date(now.getFullYear(),now.getMonth(),now.getDate())-new Date(start.getFullYear(),start.getMonth(),start.getDate()))/86400000);
+  return Math.max(1,elapsed+1);
+}
+function currentBillAmount(p){
+  if(!p)return 0;
+  const base=Number(p.baseBill??p.billing??0);
+  if(!p.bedRate||p.registrationStatus!=='Admitted')return base;
+  // The initial bill covers day 1. Additional daily bed charges accrue from day 2 onward.
+  return base + Math.max(0,admittedBedDays(p)-1)*Number(p.bedRate);
+}
+function accrueBedCharges(){
+  let changed=false;
+  state.patients.forEach(p=>{
+    if(p.registrationStatus==='Admitted'&&p.bedRate){
+      const next=currentBillAmount(p);
+      if(Number(p.billing)!==next){p.billing=next;changed=true;}
+      const paid=Number(p.amountPaid||0);
+      if(paid<next && p.paymentStatus==='Paid'){p.paymentStatus='Due';changed=true;}
+    }
+  });
+  if(changed)save();
+  return changed;
+}
+function availableReceptionRooms(){return state.rooms.filter(r=>r.status==='Available');}
+function renderReceptionHome(){
+  const pending=state.patients.filter(p=>p.registrationStatus==='Registered - Awaiting Reception');
+  const awaiting=state.patients.filter(p=>['Awaiting Payment','Payment Completed - Awaiting Bed Assignment','Bed Requested'].includes(p.registrationStatus));
+  const admitted=state.patients.filter(p=>p.registrationStatus==='Admitted');
+  const doctorsByDept=state.doctors;
+  const rooms=availableReceptionRooms();
+  const cards=`<div class="grid grid-4" style="margin:16px 0"><div class="stat"><div class="num">${pending.length}</div><div class="lbl">New registrations</div></div><div class="stat"><div class="num">${awaiting.length}</div><div class="lbl">Awaiting payment/bed</div></div><div class="stat"><div class="num">${admitted.length}</div><div class="lbl">Admitted</div></div><div class="stat"><div class="num">${rooms.length}</div><div class="lbl">Available rooms</div></div></div>`;
+  const rows=state.patients.filter(p=>['Registered - Awaiting Reception','Awaiting Payment','Payment Completed - Awaiting Bed Assignment','Bed Requested'].includes(p.registrationStatus)).map(p=>`<tr><td><b>${p.name}</b><br><span class="muted">${p.patientId}</span></td><td>${p.department||'—'}</td><td>${p.doctor||'Unassigned'}</td><td>${p.room||'—'}</td><td><span class="tag ${p.paymentStatus==='Paid'?'ok':p.paymentStatus==='Pending'?'warn':'info'}">${p.paymentStatus||'Not Generated'}</span></td><td>${p.registrationStatus==='Registered - Awaiting Reception'?`<button class="btn btn-primary btn-sm" data-rec-setup="${p.patientId}">Assign doctor & room</button>`:p.paymentStatus==='Paid'?`<button class="btn btn-primary btn-sm" data-rec-bed="${p.patientId}">🛏️ Assign bed</button>`:'<span class="muted">Waiting for patient payment</span>'}</td></tr>`).join('');
+  const setup=selectedPatientId?state.patients.find(p=>p.patientId===selectedPatientId):null;
+  let setupHtml='';
+  if(setup&&setup.registrationStatus==='Registered - Awaiting Reception'){
+    const dept=setup.department||DEPARTMENTS[0];
+    setupHtml=`<div class="card" style="margin-top:14px"><h3>Assign Doctor & Room — ${setup.name}</h3><p class="muted">This step creates the patient's bill. It does <b>not</b> assign a bed.</p><div class="grid grid-2"><div><label>Department</label><select id="recDept">${DEPARTMENTS.map(d=>`<option>${d}</option>`).join('')}</select></div><div><label>Condition severity</label><select id="recSeverity">${SEVERITIES.map(x=>`<option>${x}</option>`).join('')}</select></div><div><label>Doctor</label><select id="recDoctor">${doctorsByDept.filter(d=>d.department===dept).map(d=>`<option value="${d.doctorId}">Dr. ${d.name}</option>`).join('')}</select></div><div><label>Room</label><select id="recRoom">${rooms.map(r=>`<option value="${r.roomNumber}">Room ${r.roomNumber} · Bed ${r.bedNumber||'B1'}</option>`).join('')}</select></div></div><div id="recBillPreview" class="alert info" style="margin-top:12px">Bill amount: <b>₹${calculateBill(dept,'Mild').toLocaleString('en-IN')}</b></div><button class="btn btn-primary" id="createBillBtn">Assign Doctor & Room + Generate Bill</button><button class="btn btn-outline" id="cancelRecSetup" style="margin-left:8px">Cancel</button></div>`;
+  }
+  return `${topbar('Reception',RECEPTION_PROFILE.name)}<div class="wrap"><div class="flex-between"><div><h2>Reception Portal</h2><p class="muted">Manage registrations, billing, room assignment and bed admission.</p></div><span class="admin-badge">🏥 Reception Access</span></div>${cards}<div class="card"><h3>Patient queue</h3><div class="tablewrap"><table><thead><tr><th>Patient</th><th>Department</th><th>Doctor</th><th>Room</th><th>Payment</th><th>Action</th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="muted">No patients waiting.</td></tr>'}</tbody></table></div></div>${setupHtml}<div class="card" style="margin-top:14px"><h3>Billing rules</h3><p class="muted">Bills are generated only when Reception assigns a doctor and room. Bed charges are <b>₹100/day</b> for Mild/Moderate patients and <b>₹400/day</b> for Severe/Critical patients. Once admitted, the bill updates automatically each new hospital day. Bed assignment is blocked until payment status is <b>Paid</b>.</p></div></div>`;
+}
+
+// ---------- DOCTOR ----------
+function doctorTreatmentStats(d){
+  const assigned=state.patients.filter(p=>p.doctor===d.name);
+  const treatedIds=new Set();
+  assigned.forEach(p=>{
+    const completed=state.appointments.some(a=>a.patientId===p.patientId&&a.doctorName===d.name&&a.status==='Completed');
+    const hasClinicalWork=(p.diagnosisHistory||[]).length>0 || (p.prescriptions||[]).some(pr=>pr.doctor===d.name);
+    if(completed||hasClinicalWork)treatedIds.add(p.patientId);
+  });
+  return {assigned:assigned.length,treated:treatedIds.size,remaining:Math.max(0,assigned.length-treatedIds.size)};
+}
+function renderDoctorHome(){
+  const d=state.doctors.find(x=>x.doctorId===session.id);
+  const stats=doctorTreatmentStats(d);
+  const tabs=[{key:'patients',label:'My Patients'},{key:'search',label:'Search Patients'},{key:'appointments',label:'Appointments'},{key:'availability',label:'Availability'}];
+  let body='';
+  if(selectedPatientId){
+    body=renderPatientDetailForDoctor(d);
+  } else if(doctorTab==='patients'){
+    const mine=state.patients.filter(p=>p.doctor===d.name);
+    body=`<div class="grid grid-2">${mine.length?mine.map(p=>patientCard(p)).join(''):'<p class="muted">No patients assigned yet.</p>'}</div>`;
+  } else if(doctorTab==='search'){
+    body=`<div class="card"><label>Search all patients (name, condition, ID)</label><input id="docSearch" placeholder="Type to search..."></div><div class="grid grid-2" id="searchResults"></div>`;
+  } else if(doctorTab==='appointments'){
+    const mine=state.appointments.filter(a=>a.doctorName===d.name).sort((a,b)=>a.date.localeCompare(b.date));
+    body=`<div class="card"><h3>Appointment schedule</h3><div class="tablewrap"><table><thead><tr><th>Patient</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${mine.length?mine.map(a=>`<tr><td>${a.patientName}</td><td>${a.date}</td><td>${displayTime(a.time)}</td><td><span class="tag ${a.status==='Confirmed'?'ok':a.status==='Cancelled'?'warn':a.status==='Completed'?'info':'pend'}">${a.status}</span></td>
+      <td>${a.status==='Requested'?`<button class="btn btn-sm btn-primary" data-acc="${a.id}">Accept</button> <button class="btn btn-sm btn-danger" data-rej="${a.id}">Reject</button>`:a.status==='Confirmed'?`<button class="btn btn-sm btn-outline" data-comp="${a.id}">Mark completed</button> <button class="btn btn-sm btn-danger" data-resched="${a.id}">Reschedule</button>`:'—'}</td></tr>`).join(''):'<tr><td colspan="5" class="muted">No appointments.</td></tr>'}</tbody></table></div></div>`;
+  } else if(doctorTab==='availability'){
+    const shifts=(d.workingHours&&d.workingHours.length)?d.workingHours:[{start:'09:00',end:'14:00'},{start:'16:00',end:'20:00'}];
+    body=`<div class="card"><h3>Set availability</h3>
+      <label>Status</label><select id="avail_status">${['Available','Unavailable','On Leave'].map(s=>`<option ${d.availability===s?'selected':''}>${s}</option>`).join('')}</select>
+      <label>Shift 1</label><div style="display:flex;gap:8px"><input type="time" id="shift1_start" value="${shifts[0]?.start||'09:00'}"><input type="time" id="shift1_end" value="${shifts[0]?.end||'14:00'}"></div>
+      <label>Shift 2 (optional)</label><div style="display:flex;gap:8px"><input type="time" id="shift2_start" value="${shifts[1]?.start||''}"><input type="time" id="shift2_end" value="${shifts[1]?.end||''}"></div>
+      <p class="muted" style="margin-top:8px">Appointment slots are fixed at 30 minutes and generated from these shifts.</p>
+      <button class="btn btn-primary" id="saveAvail" style="margin-top:10px">Save availability</button></div>`;
+  }
+  const metrics=`<div class="grid grid-3" style="margin:16px 0"><div class="stat"><div class="num">${stats.assigned}</div><div class="lbl">Assigned patients</div></div><div class="stat"><div class="num">${stats.treated}</div><div class="lbl">Patients treated</div></div><div class="stat"><div class="num">${stats.remaining}</div><div class="lbl">Remaining patients</div></div></div>`;
+  return `${topbar('Doctor',d.name)}<div class="wrap"><h2>Dr. ${d.name}</h2><p class="muted">${d.department} · Live treatment tracking</p>${metrics}${subtabBar(tabs,doctorTab)}${body}</div>`;
+}
+function patientCard(p){
+  return `<div class="card"><div class="flex-between"><h3>${p.name}</h3><span class="tag info">${p.patientId}</span></div>
+    <p class="muted">Age ${p.age} · ${p.gender} · Blood ${p.bloodGroup} · ${p.department}</p>
+    <p>Condition: <b>${p.condition}</b> &nbsp; Result: <span class="tag ${p.testResult==='Normal'?'ok':'warn'}">${p.testResult}</span></p>
+    <button class="btn btn-outline btn-sm" data-view="${p.patientId}">View full profile</button></div>`;
+}
+function renderPatientDetailForDoctor(d){
+  const p=state.patients.find(x=>x.patientId===selectedPatientId);
+  if(!p)return '<p class="muted">Patient not found.</p>';
+  const tl=medicalTimeline(p);
+  return `<button class="btn btn-outline btn-sm" id="backToList" style="margin-bottom:10px">← Back</button>
+  <div class="grid grid-2">
+    <div class="card"><h3>${p.name} <span class="tag info">${p.patientId}</span></h3>
+      <p class="muted">Age ${p.age} · ${p.gender} · Blood ${p.bloodGroup} · ${p.department}</p>
+      <p>Current: <b>${p.condition}</b> · <span class="tag ${p.testResult==='Normal'?'ok':'warn'}">${p.testResult}</span></p>
+      <canvas id="vitalsChart"></canvas></div>
+    <div class="card"><h3>Add to record</h3>
+      <label>Diagnosis</label><div style="display:flex;gap:6px"><input id="in_diag" placeholder="e.g. Hypertension"><button class="btn btn-sm btn-primary" id="addDiag">Add</button></div>
+      <label>Vitals (BP / HR / Temp / Sugar)</label><div style="display:flex;gap:6px;flex-wrap:wrap">
+        <input id="in_bp" placeholder="120/80" style="flex:1;min-width:80px"><input id="in_hr" placeholder="HR" style="flex:1;min-width:60px">
+        <input id="in_temp" placeholder="Temp" style="flex:1;min-width:60px"><input id="in_sugar" placeholder="Sugar" style="flex:1;min-width:60px">
+        <button class="btn btn-sm btn-primary" id="addVitals">Add</button></div>
+      <label>Prescription (medicine / dosage / duration)</label><div style="display:flex;gap:6px;flex-wrap:wrap">
+        <input id="in_med" placeholder="Medicine" style="flex:1;min-width:100px"><input id="in_dose" placeholder="Dosage" style="flex:1;min-width:70px">
+        <input id="in_dur" placeholder="Duration" style="flex:1;min-width:70px"><button class="btn btn-sm btn-primary" id="addRx">Add</button></div>
+      <label>Lab result (test / result)</label><div style="display:flex;gap:6px">
+        <input id="in_test" placeholder="Test name" style="flex:1"><select id="in_result"><option>Normal</option><option>Abnormal</option><option>Inconclusive</option></select>
+        <button class="btn btn-sm btn-primary" id="addLab">Add</button></div>
+    </div></div>
+  <div class="card"><h3>Full medical history</h3><div class="timeline">${tl.map(i=>`<div class="item"><div class="muted">${i.date} · ${i.type}</div><div>${i.text}</div></div>`).join('')||'<p class="muted">No records yet.</p>'}</div></div>`;
+}
+
+// ---------- ADMIN ----------
+function renderAdminHome(){
+  const a=state.admins.find(x=>x.adminId===session.id);
+  const tabs=[{key:'overview',label:'Overview'},{key:'analytics',label:'Analytics'},{key:'appointments',label:'Appointments'},{key:'patients',label:'Patients'},{key:'insights',label:'Insights'},{key:'billing',label:'Billing'},{key:'resources',label:'Resources'},{key:'administrators',label:'Administrators'}];
+  const totalRevenue=state.patients.reduce((s,p)=>s+(p.billing||0),0);
+  const today=todayStr();
+  const newToday=[...state.patients,...state.doctors].filter(u=>u.signupDate===today).length;
+  const revenueToday=state.patients.filter(p=>p.admission===today).reduce((s,p)=>s+(p.billing||0),0);
+  let body='';
+  if(adminTab==='overview'){
+    body=`<div class="grid grid-4" style="margin:14px 0">
+      <div class="stat"><div class="num">${state.patients.length}</div><div class="lbl">Total patients</div></div>
+      <div class="stat"><div class="num">${state.doctors.length}</div><div class="lbl">Doctors</div></div>
+      <div class="stat"><div class="num">${newToday}</div><div class="lbl">New registrations today</div></div>
+      <div class="stat"><div class="num">${state.appointments.length}</div><div class="lbl">Total appointments</div></div>
+      <div class="stat"><div class="num">$${totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="lbl">Total billing</div></div>
+      <div class="stat"><div class="num">$${revenueToday.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="lbl">Billed today</div></div>
+      <div class="stat"><div class="num">${state.appointments.filter(a=>a.status==='Requested').length}</div><div class="lbl">Pending appointments</div></div>
+      <div class="stat"><div class="num">${state.patients.filter(p=>p.testResult==='Abnormal').length}</div><div class="lbl">Abnormal results</div></div></div>
+    <div class="card"><h3>Doctor availability (today)</h3><div class="tablewrap"><table><thead><tr><th>Doctor</th><th>Department</th><th>Status</th></tr></thead><tbody>
+      ${state.doctors.length?state.doctors.map(dd=>{const st=doctorStatusForDate(dd,todayStr());return `<tr><td>Dr. ${dd.name}</td><td>${dd.department}</td><td>${st.label}</td></tr>`;}).join(''):'<tr><td colspan="3" class="muted">No doctors yet.</td></tr>'}</tbody></table></div></div>
+    <div class="card"><h3>Recent registrations</h3><div class="tablewrap"><table><thead><tr><th>Name</th><th>Role</th><th>ID</th><th>Date</th></tr></thead><tbody>
+      ${[...state.patients.map(p=>({name:p.name,role:'Patient',id:p.patientId,date:p.signupDate})),...state.doctors.map(dd=>({name:dd.name,role:'Doctor',id:dd.doctorId,date:dd.signupDate||'—'}))]
+      .sort((x,y)=>(y.date||'').localeCompare(x.date||'')).slice(0,10).map(u=>`<tr><td>${u.name}</td><td>${u.role}</td><td>${u.id}</td><td>${u.date||'—'}</td></tr>`).join('')}</tbody></table></div></div>`;
+  } else if(adminTab==='analytics'){
+    body=`<div class="grid grid-2">
+      <div class="card"><h3>Condition distribution</h3><canvas id="condChart"></canvas></div>
+      <div class="card"><h3>Blood group distribution</h3><canvas id="bloodChart"></canvas></div>
+      <div class="card"><h3>Age distribution</h3><canvas id="ageChart"></canvas></div>
+      <div class="card"><h3>Gender distribution</h3><canvas id="genderChart"></canvas></div>
+      <div class="card"><h3>Admissions over time</h3><canvas id="admChart"></canvas></div>
+      <div class="card"><h3>Department-wise patients</h3><canvas id="deptChart"></canvas></div>
+      <div class="card" style="grid-column:1/-1"><h3>Test result distribution</h3><canvas id="testChart"></canvas></div>
+    </div>`;
+  } else if(adminTab==='appointments'){
+    body=`<div class="card"><div class="searchrow">
+      <select id="apDoc"><option value="">All doctors</option>${state.doctors.map(dd=>`<option>${dd.name}</option>`).join('')}</select>
+      <select id="apStatus"><option value="">All statuses</option>${['Requested','Confirmed','Completed','Cancelled'].map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="tablewrap"><table><thead><tr><th>Patient</th><th>Doctor</th><th>Dept</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody id="apTableBody"></tbody></table></div></div>`;
+  } else if(adminTab==='patients'){
+    body=`<div class="card"><div class="searchrow">
+      <input id="searchInput" placeholder="Search name, condition, doctor...">
+      <select id="filterDept"><option value="">All doctors</option>${[...new Set(state.patients.map(p=>p.doctor))].map(dd=>`<option>${dd}</option>`).join('')}</select>
+      <select id="filterGender"><option value="">All genders</option><option>Male</option><option>Female</option><option>Other</option></select>
+      <select id="filterTest"><option value="">All results</option><option>Normal</option><option>Abnormal</option><option>Inconclusive</option></select>
+      <button class="btn btn-outline btn-sm" id="resetFilters">Reset</button>
+      <button class="btn btn-primary btn-sm" id="exportCsv">⬇ Export CSV</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Patient</th><th>Age/Gender</th><th>Condition</th><th>Doctor</th><th>Dept</th><th>Result</th><th>Billing</th></tr></thead><tbody id="patientTableBody"></tbody></table></div></div>`;
+  } else if(adminTab==='insights'){
+    const {conds,dept}=computeDistributions();
+    const abn=state.patients.filter(p=>p.testResult==='Abnormal').length;
+    const topCond=Object.entries(conds).sort((x,y)=>y[1]-x[1])[0];
+    const topDept=Object.entries(dept).sort((x,y)=>y[1]-x[1])[0];
+    const avgBill=totalRevenue/(state.patients.length||1);
+    body=`<div class="card"><h3>Automated insights (rule-based)</h3>
+      ${abn>0?`<div class="alert high">🔴 <b>HIGH PRIORITY</b> — ${abn} patient(s) have abnormal test results and may need review.</div>`:''}
+      ${topDept?`<div class="alert attn">⚠️ <b>ATTENTION</b> — ${topDept[0]} has the highest patient load (${topDept[1]} patients).</div>`:''}
+      ${topCond?`<div class="alert info">📈 <b>TREND</b> — ${topCond[0]} is the most common condition (${topCond[1]} cases).</div>`:''}
+      <div class="alert info">💰 <b>INSIGHT</b> — Average billing per admission: $${avgBill.toLocaleString(undefined,{maximumFractionDigits:0})}.</div>
+      <p class="muted" style="margin-top:8px">These are simple threshold/frequency rules for prototype purposes, not clinical decision-making.</p></div>`;
+  } else if(adminTab==='billing'){
+    const bills=state.patients.map(p=>p.billing||0);
+    const {dept}=computeDistributions();
+    const deptBill={}; state.patients.forEach(p=>deptBill[p.department]=(deptBill[p.department]||0)+(p.billing||0));
+    const max=Math.max(...Object.values(deptBill),1);
+    body=`<div class="grid grid-4" style="margin-bottom:14px">
+      <div class="stat"><div class="num">$${totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="lbl">Total revenue</div></div>
+      <div class="stat"><div class="num">$${(totalRevenue/(bills.length||1)).toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="lbl">Average bill</div></div>
+      <div class="stat"><div class="num">$${Math.max(...bills,0).toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="lbl">Highest bill</div></div>
+      <div class="stat"><div class="num">$${Math.min(...bills,0).toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="lbl">Lowest bill</div></div></div>
+    <div class="card"><h3>Department-wise billing</h3>${Object.entries(deptBill).map(([k,v])=>`<div style="margin-bottom:8px"><div class="flex-between"><span>${k}</span><span class="muted">$${v.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div><div class="bar"><div style="width:${(v/max*100).toFixed(0)}%"></div></div></div>`).join('')}</div>`;
+  } else if(adminTab==='resources'){
+    const occupied=state.patients.filter(p=>!p.discharge||p.discharge>today).length;
+    const totalBeds=250, avail=totalBeds-occupied;
+    const icuTotal=30, icuOcc=Math.min(icuTotal,Math.round(occupied*0.12));
+    const {dept}=computeDistributions();
+    body=`<div class="grid grid-2">
+      <div class="card"><h3>🛏️ Bed status</h3><table><tr><td>Total beds</td><td>${totalBeds}</td></tr><tr><td>Occupied (currently admitted)</td><td>${occupied}</td></tr><tr><td>Available</td><td>${avail}</td></tr></table>
+        <div class="bar" style="margin-top:8px"><div style="width:${(occupied/totalBeds*100).toFixed(0)}%;background:${occupied/totalBeds>0.85?'var(--warn)':'var(--brand)'}"></div></div>
+        <p class="muted" style="margin-top:6px">${(occupied/totalBeds*100).toFixed(0)}% occupancy — updates as new patients register.</p></div>
+      <div class="card"><h3>ICU</h3><table><tr><td>Total ICU beds</td><td>${icuTotal}</td></tr><tr><td>Occupied</td><td>${icuOcc}</td></tr><tr><td>Available</td><td>${icuTotal-icuOcc}</td></tr></table></div>
+      <div class="card" style="grid-column:1/-1"><h3>Department capacity (patient share)</h3>${Object.entries(dept).map(([k,v])=>`<div class="flex-between"><span>${k}</span><span class="muted">${v} patients</span></div>`).join('')}</div>
+    </div><p class="muted">Bed figures are illustrative baseline capacity; occupancy is computed from real patient admission/discharge data.</p>`;
+  } else if(adminTab==='administrators'){
+    const admins=state.admins||[];
+    body=`<div class="grid grid-2">
+      <div class="card">
+        <h3>🔐 Grant administrator access</h3>
+        <p class="muted">Only a currently authenticated administrator can create another administrator. Your current 2-step session is required, and your password is requested again before access is granted.</p>
+        <label>New admin full name</label><input id="newAdminName" placeholder="Full name">
+        <label>New admin mobile</label><input id="newAdminMobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+        <label>New admin email</label><input id="newAdminEmail" type="email" placeholder="admin@example.com">
+        <label>New admin password</label><input id="newAdminPassword" type="password" placeholder="Minimum 8 characters">
+        <label>Confirm new admin password</label><input id="newAdminPassword2" type="password" placeholder="Re-enter password">
+        <label>Your current admin password</label><input id="grantAdminPassword" type="password" placeholder="Confirm your authorization">
+        <div id="adminGrantErr">${adminGrantErr?`<div class="err">${adminGrantErr}</div>`:''}</div>
+        <button class="btn btn-primary" id="grantAdminBtn" style="width:100%;margin-top:12px">Grant Admin Access</button>
+      </div>
+      <div class="card">
+        <h3>Authorized administrators</h3>
+        <p class="muted">Each administrator has separate credentials and 2-step verification.</p>
+        <div class="tablewrap"><table><thead><tr><th>Name</th><th>Admin ID</th><th>Role</th><th>Mobile</th><th>Granted by</th></tr></thead><tbody>
+        ${admins.map(x=>`<tr><td>${x.name}</td><td><b>${x.adminId}</b></td><td>${x.role||'Authorized Administrator'}</td><td>${maskMobile(x.mobile||'')}</td><td>${x.grantedBy||'System'}</td></tr>`).join('')}
+        </tbody></table></div>
+      </div>
+    </div>
+    <div class="security-card"><b>Important:</b> The new admin receives their own Admin ID and password. On login, an OTP is verified against the mobile number stored for that admin.</div>`;
+  }
+  return `${topbar('Admin',a.name)}<div class="wrap"><div class="flex-between"><div><h2>Hospital overview</h2><p class="muted">Admin ID: ${a.adminId} · Security: <b>2-step verification enabled</b></p></div><span class="admin-badge">🛡️ Protected Admin Portal</span></div>${subtabBar(tabs,adminTab)}${body}</div>`;
+}
+function fillPatientTable(){
+  const tbody=document.getElementById('patientTableBody'); if(!tbody)return;
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const fd=document.getElementById('filterDept')?.value||''; const fg=document.getElementById('filterGender')?.value||''; const ft=document.getElementById('filterTest')?.value||'';
+  const rows=state.patients.filter(p=>{
+    const mq=!q||[p.name,p.condition,p.doctor,p.testResult].join(' ').toLowerCase().includes(q);
+    return mq&&(!fd||p.doctor===fd)&&(!fg||p.gender===fg)&&(!ft||p.testResult===ft);
+  });
+  tbody.innerHTML=rows.map(p=>`<tr><td>${p.name}</td><td>${p.age}/${p.gender}</td><td>${p.condition}</td><td>${p.doctor}</td><td>${p.department}</td>
+    <td><span class="tag ${p.testResult==='Normal'?'ok':'warn'}">${p.testResult}</span></td><td>$${(p.billing||0).toLocaleString(undefined,{maximumFractionDigits:0})}</td></tr>`).join('');
+  tbody._rows=rows;
+}
+function fillAppointmentsTable(){
+  const tbody=document.getElementById('apTableBody'); if(!tbody)return;
+  const fd=document.getElementById('apDoc')?.value||''; const fs=document.getElementById('apStatus')?.value||'';
+  const rows=state.appointments.filter(a=>(!fd||a.doctorName===fd)&&(!fs||a.status===fs)).sort((a,b)=>b.date.localeCompare(a.date));
+  tbody.innerHTML=rows.map(a=>`<tr><td>${a.patientName}</td><td>${a.doctorName}</td><td>${a.department}</td><td>${a.date}</td><td>${a.time}</td>
+    <td><span class="tag ${a.status==='Confirmed'?'ok':a.status==='Cancelled'?'warn':a.status==='Completed'?'info':'pend'}">${a.status}</span></td></tr>`).join('')||'<tr><td colspan="6" class="muted">No appointments.</td></tr>';
+}
+let charts={};
+function destroyCharts(){Object.values(charts).forEach(c=>c&&c.destroy());charts={};}
+function bar(id,labels,data,color){const el=document.getElementById(id);if(!el||typeof Chart==='undefined')return;charts[id]=new Chart(el,{type:'bar',data:{labels,datasets:[{data,backgroundColor:color}]},options:{plugins:{legend:{display:false}}}});}
+function line(id,labels,data,color){const el=document.getElementById(id);if(!el||typeof Chart==='undefined')return;charts[id]=new Chart(el,{type:'line',data:{labels,datasets:[{data,borderColor:color,backgroundColor:color,tension:.3}]},options:{plugins:{legend:{display:false}}}});}
+function doughnut(id,labels,data){const el=document.getElementById(id);if(!el||typeof Chart==='undefined')return;charts[id]=new Chart(el,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:['#0e6e5c','#2f6fed','#b8860b','#c0392b','#8e44ad','#16a085']}]}});}
+function drawAdminCharts(){
+  destroyCharts();
+  const {conds,blood,gender,testRes,dept,ageBuckets,admMonth}=computeDistributions();
+  bar('condChart',Object.keys(conds),Object.values(conds),'#0e6e5c');
+  bar('bloodChart',Object.keys(blood),Object.values(blood),'#2f6fed');
+  bar('ageChart',Object.keys(ageBuckets),Object.values(ageBuckets),'#b8860b');
+  doughnut('genderChart',Object.keys(gender),Object.values(gender));
+  const months=Object.keys(admMonth).sort();
+  line('admChart',months,months.map(m=>admMonth[m]),'#0e6e5c');
+  bar('deptChart',Object.keys(dept),Object.values(dept),'#8e44ad');
+  doughnut('testChart',Object.keys(testRes),Object.values(testRes));
+}
+function drawVitalsChart(p){
+  destroyCharts();
+  const v=p.vitals||[]; if(!v.length)return;
+  const labels=v.map((_,i)=>'Reading '+(i+1));
+  const systolic=v.map(x=>+x.bp.split('/')[0]);
+  line('vitalsChart',labels,systolic,'#c0392b');
+}
+
+// ---------- events ----------
+function afterRender(){
+  document.querySelectorAll('.role-card').forEach(el=>el.addEventListener('click',()=>{authRole=el.dataset.role;authTab='login';authErr='';admin2FA={pending:false,otp:null,expiresAt:0,maskedMobile:'',demoOtp:'',adminId:null};view='auth';render();}));
+  const backBtn=document.getElementById('backBtn'); if(backBtn)backBtn.addEventListener('click',()=>{admin2FA={pending:false,otp:null,expiresAt:0,maskedMobile:'',demoOtp:'',adminId:null};view='landing';render();});
+  document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>{authTab=el.dataset.tab;authErr='';render();}));
+  const submitBtn=document.getElementById('submitAuth'); if(submitBtn)submitBtn.addEventListener('click',handleAuthSubmit);
+  const logoutBtn=document.getElementById('logoutBtn'); if(logoutBtn)logoutBtn.addEventListener('click',()=>{session=null;selectedPatientId=null;admin2FA={pending:false,otp:null,expiresAt:0,maskedMobile:'',demoOtp:'',adminId:null};view='landing';render();});
+  document.querySelectorAll('.subtab').forEach(el=>el.addEventListener('click',()=>{ if(session?.role==='admin')session.lastActivity=Date.now();
+    const k=el.dataset.sub; selectedPatientId=null;
+    if(view==='patientHome')patientTab=k; else if(view==='doctorHome')doctorTab=k; else if(view==='adminHome')adminTab=k;
+    render();
+  }));
+  // patient: booking
+  const deptSel=document.getElementById('bk_dept');
+  if(deptSel)deptSel.addEventListener('change',()=>{bookDept=deptSel.value;bookDoctor=null;render();});
+  const bkDateInput=document.getElementById('bk_date');
+  if(bkDateInput)bkDateInput.addEventListener('change',()=>{bookDate=bkDateInput.value;render();});
+  document.querySelectorAll('[data-slots]').forEach(el=>el.addEventListener('click',()=>{bookDoctor=el.dataset.slots;render();}));
+  document.querySelectorAll('[data-bookdoc]').forEach(el=>el.addEventListener('click',()=>{
+    bookDept=el.dataset.bookdept; bookDoctor=el.dataset.bookdoc; bookDate=todayStr(); patientTab='appointments'; render();
+  }));
+  document.querySelectorAll('[data-book]').forEach(el=>el.addEventListener('click',()=>{
+    const p=state.patients.find(x=>x.patientId===session.id);
+    const [docName,time]=el.dataset.book.split('|'); const date=el.dataset.bookdate||bookDate;
+    const doc=state.doctors.find(dd=>dd.name===docName);
+    if(!p||!doc)return;
+    const free=availableSlotsForDoctorDate(doc,date);
+    if(!free.includes(time)){authErr='That slot is no longer available. Please choose another slot.';render();return;}
+    const duplicate=state.appointments.some(a=>a.patientId===p.patientId&&a.doctorName===docName&&a.date===date&&a.time===time&&a.status!=='Cancelled');
+    if(duplicate){alert('You already have an appointment at this time.');return;}
+    const appt={id:uid('AP'),patientId:p.patientId,patientName:p.name,doctorName:docName,department:doc.department,date,time,status:'Requested'};
+    state.appointments.push(appt);
+    notify('doctor',doc.doctorId,`New appointment requested by ${p.name} on ${date} ${displayTime(time)}.`);
+    notify('patient',p.patientId,`Appointment request sent to Dr. ${docName} for ${date} ${displayTime(time)}.`);
+    logActivity(`${p.name} requested an appointment with ${docName}`);
+    bookDoctor=null; save(); render();
+  }));
+  const docDirSearch=document.getElementById('docDirSearch');
+  if(docDirSearch)docDirSearch.addEventListener('input',()=>{
+    const q=docDirSearch.value.toLowerCase();
+    document.querySelectorAll('#doctorDirectory [data-doc-name]').forEach(el=>{
+      const match=!q||el.dataset.docName.includes(q)||el.dataset.docDept.includes(q);
+      el.style.display=match?'':'none';
+    });
+  });
+  const saveAvail=document.getElementById('saveAvail');
+  if(saveAvail)saveAvail.addEventListener('click',()=>{
+    const d=state.doctors.find(x=>x.doctorId===session.id);
+    d.availability=document.getElementById('avail_status').value;
+    const shifts=[]; const s1s=document.getElementById('shift1_start').value,s1e=document.getElementById('shift1_end').value;
+    if(s1s&&s1e)shifts.push({start:s1s,end:s1e});
+    const s2s=document.getElementById('shift2_start').value,s2e=document.getElementById('shift2_end').value;
+    if(s2s&&s2e)shifts.push({start:s2s,end:s2e});
+    d.workingHours=shifts;
+    logActivity(`Dr. ${d.name} updated availability to ${d.availability}`); save(); alert('Availability updated.'); render();
+  });
+  const pForPayment=state.patients.find(x=>x.patientId===session.id);
+  const upiPaymentPayload=pForPayment?`upi://pay?pa=9381629089%40ptyes&pn=MediTrack%20Hospital&am=${currentBillAmount(pForPayment).toFixed(2)}&cu=INR&tn=MediTrack%20Hospital%20Bill`:'';
+  const upiQr=document.getElementById('upiQr');
+  if(upiQr&&upiPaymentPayload){
+    const qrFallback=()=>{
+      const src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data='+encodeURIComponent(upiPaymentPayload);
+      upiQr.innerHTML=`<img src="${src}" width="220" height="220" alt="UPI payment QR code" style="display:block" onerror="this.parentElement.innerHTML='<div class=\"muted\" style=\"text-align:center;padding:20px\">QR image could not load.<br>Use Open UPI Payment App below.</div>'">`;
+    };
+    upiQr.innerHTML='';
+    if(window.QRCode){
+      try{new QRCode(upiQr,{text:upiPaymentPayload,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});}
+      catch(e){qrFallback();}
+    }else{
+      qrFallback();
+    }
+  }
+  const openUpiBtn=document.getElementById('openUpiBtn');
+  if(openUpiBtn)openUpiBtn.addEventListener('click',()=>{
+    if(!upiPaymentPayload)return;
+    window.location.href=upiPaymentPayload;
+  });
+  const confirmPaymentBtn=document.getElementById('confirmPaymentBtn');
+  if(confirmPaymentBtn)confirmPaymentBtn.addEventListener('click',()=>{
+    const p=state.patients.find(x=>x.patientId===session.id);
+    if(!p||!p.billing){alert('No bill is available for payment yet.');return;}
+    if(p.paymentStatus==='Paid'){alert('This bill is already marked as Paid.');return;}
+    const confirmed=confirm('Have you completed the UPI payment in your payment app?\n\nFor this demo website, tapping OK will mark the bill as Paid. Real bank/UPI verification is not connected.');
+    if(!confirmed)return;
+    p.amountPaid=currentBillAmount(p); p.paymentStatus='Paid'; p.paidAt=new Date().toISOString(); p.paymentReference='Payment completed'; p.paymentUpiId='9381629089@ptyes';
+    p.registrationStatus='Payment Completed - Awaiting Bed Assignment';
+    const paidRoom=state.rooms.find(r=>String(r.roomNumber)===String(p.room)); if(paidRoom){paidRoom.status='Reserved';paidRoom.patientId=p.patientId;paidRoom.department=p.department||null;}
+    notify('reception','R1001',`Payment recorded from ${p.name}. Patient can now request a bed.`); logActivity(`${p.name} marked bill ${p.billingReceipt||''} as payment completed to 9381629089@ptyes`); save(); render();
+  });
+  const requestBedBtn=document.getElementById('requestBedBtn');
+  if(requestBedBtn)requestBedBtn.addEventListener('click',()=>{
+    const p=state.patients.find(x=>x.patientId===session.id);
+    if(!p||p.paymentStatus!=='Paid'){alert('Please complete payment before requesting a bed.');return;}
+    if(!p.room){alert('Reception has not assigned a room yet.');return;}
+    const room=state.rooms.find(r=>String(r.roomNumber)===String(p.room));
+    if(!room){alert('Assigned room could not be found.');return;}
+    room.status='Reserved';room.patientId=p.patientId;room.department=p.department||null;
+    p.registrationStatus='Bed Requested';
+    notify('reception','R1001',`Bed requested by ${p.name}. Room ${p.room} is reserved.`);
+    logActivity(`${p.name} requested bed assignment after payment.`);save();render();
+  });
+  const saveProfile=document.getElementById('saveProfile');
+  if(saveProfile)saveProfile.addEventListener('click',()=>{
+    const p=state.patients.find(x=>x.patientId===session.id);
+    p.phone=document.getElementById('pf_phone').value; p.address=document.getElementById('pf_address').value;
+    p.bloodGroup=document.getElementById('pf_blood').value; p.emergencyContact=document.getElementById('pf_emergency').value;
+    save(); alert('Profile updated.'); render();
+  });
+  const dlBtn=document.getElementById('downloadSummary');
+  if(dlBtn)dlBtn.addEventListener('click',async()=>{
+    const p=state.patients.find(x=>x.patientId===session.id);
+    const tl=medicalTimeline(p);
+    const text=`MEDICAL SUMMARY\nPatient: ${p.name} (${p.patientId})\nAge/Gender: ${p.age}/${p.gender}  Blood group: ${p.bloodGroup}\nCondition: ${p.condition}  Doctor: ${p.doctor}\n\nHISTORY:\n`+tl.map(i=>`${i.date} [${i.type}] ${i.text}`).join('\n');
+    if(downloadsApi){try{await downloadsApi.save({filename:p.patientId+'_summary.txt',data:text});return;}catch(e){}}
+    document.getElementById('printArea').textContent=text; window.print();
+  });
+  document.querySelectorAll('[data-nid]').forEach(el=>el.addEventListener('click',()=>{
+    const n=state.notifications.find(x=>x.id===el.dataset.nid); if(n){n.read=true;save();render();}
+  }));
+  document.querySelectorAll('[data-rec-setup]').forEach(el=>el.addEventListener('click',()=>{selectedPatientId=el.dataset.recSetup;render();}));
+  const cancelRecSetup=document.getElementById('cancelRecSetup'); if(cancelRecSetup)cancelRecSetup.addEventListener('click',()=>{selectedPatientId=null;render();});
+  const recDept=document.getElementById('recDept'),recSeverity=document.getElementById('recSeverity'),recDoctor=document.getElementById('recDoctor');
+  function refreshReceptionDoctors(){if(!recDept||!recDoctor)return;const current=recDoctor.value;recDoctor.innerHTML=state.doctors.filter(d=>d.department===recDept.value).map(d=>`<option value="${d.doctorId}">Dr. ${d.name}</option>`).join('');if([...recDoctor.options].some(o=>o.value===current))recDoctor.value=current;}
+  function refreshReceptionBill(){const box=document.getElementById('recBillPreview');if(box&&recDept&&recSeverity)box.innerHTML=`Bill amount: <b>₹${calculateBill(recDept.value,recSeverity.value).toLocaleString('en-IN')}</b>`;}
+  if(recDept)recDept.addEventListener('change',()=>{refreshReceptionDoctors();refreshReceptionBill();}); if(recSeverity)recSeverity.addEventListener('change',refreshReceptionBill);
+  const createBillBtn=document.getElementById('createBillBtn'); if(createBillBtn)createBillBtn.addEventListener('click',()=>{
+    const p=state.patients.find(x=>x.patientId===selectedPatientId); const roomNo=+document.getElementById('recRoom').value; const room=state.rooms.find(r=>+r.roomNumber===roomNo); const doctor=state.doctors.find(d=>d.doctorId===document.getElementById('recDoctor').value); const dept=document.getElementById('recDept').value; const severity=document.getElementById('recSeverity').value;
+    if(!p||!room||room.status!=='Available'||!doctor){alert('Please select an available room and doctor.');return;}
+    p.department=dept;p.severity=severity;p.doctor=doctor.name;p.room=room.roomNumber;p.bed=null;p.baseBill=calculateBill(dept,severity);p.billing=p.baseBill;p.bedRate=0;p.amountPaid=0;p.paymentStatus='Pending';p.registrationStatus='Awaiting Payment';p.billGeneratedAt=new Date().toLocaleString('en-IN');p.billingReceipt='MT-'+todayStr().replace(/-/g,'')+'-'+String(Math.floor(1000+Math.random()*9000));p.condition=p.condition==='Pending clinical assessment'?`Clinical assessment - ${severity}`:p.condition;
+    room.status='Reserved';room.patientId=p.patientId;room.department=dept;
+    notify('patient',p.patientId,`Bill generated: ₹${p.billing.toLocaleString('en-IN')}. Receipt ${p.billingReceipt}. Please pay from your portal before bed assignment.`); logActivity(`Reception assigned Dr. ${doctor.name} and Room ${room.roomNumber} to ${p.name}; bill ₹${p.billing}`); selectedPatientId=null;save();render();
+  });
+  document.querySelectorAll('[data-rec-bed]').forEach(el=>el.addEventListener('click',()=>{
+    const p=state.patients.find(x=>x.patientId===el.dataset.recBed); if(!p)return; if(p.paymentStatus!=='Paid'){alert("Bed assignment is blocked until the patient's bill is paid.");return;}
+    if(!['Payment Completed - Awaiting Bed Assignment','Bed Requested'].includes(p.registrationStatus)){alert('This patient is not ready for bed assignment.');return;}
+    const room=state.rooms.find(r=>String(r.roomNumber)===String(p.room) && (r.status==='Reserved'||r.patientId===p.patientId)); if(!room){alert('Assigned room is no longer reserved.');return;}
+    const other=state.patients.find(x=>x.patientId!==p.patientId && x.registrationStatus==='Admitted' && String(x.room)===String(room.roomNumber)); if(other){alert('This room is already occupied.');return;}
+    room.status='Occupied';room.patientId=p.patientId;room.department=p.department;p.bed=room.bedNumber||'B1';p.admission=todayStr();p.bedRate=bedRateForSeverity(p.severity);p.baseBill=Number(p.baseBill??p.billing??0);p.billing=p.baseBill;p.amountPaid=Number(p.amountPaid||0);p.registrationStatus='Admitted';
+    notify('patient',p.patientId,`Bed ${p.bed} assigned in Room ${p.room}. You are now admitted.`); logActivity(`Reception assigned Bed ${p.bed}, Room ${p.room} to ${p.name} after payment.`);save();render();
+  }));
+  // doctor
+  document.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>{selectedPatientId=el.dataset.view;render();}));
+  const backToList=document.getElementById('backToList'); if(backToList)backToList.addEventListener('click',()=>{selectedPatientId=null;render();});
+  const docSearch=document.getElementById('docSearch');
+  if(docSearch)docSearch.addEventListener('input',()=>{
+    const q=docSearch.value.toLowerCase();
+    const res=q?state.patients.filter(p=>[p.name,p.condition,p.patientId].join(' ').toLowerCase().includes(q)):[];
+    document.getElementById('searchResults').innerHTML=res.map(p=>patientCard(p)).join('');
+    document.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>{selectedPatientId=el.dataset.view;render();}));
+  });
+  const addDiag=document.getElementById('addDiag');
+  if(addDiag)addDiag.addEventListener('click',()=>{
+    const p=state.patients.find(x=>x.patientId===selectedPatientId); const v=document.getElementById('in_diag').value.trim(); if(!v)return;
+    const d=state.doctors.find(x=>x.doctorId===session.id);
+    p.diagnosisHistory=p.diagnosisHistory||[]; p.diagnosisHistory.push({date:todayStr(),doctor:d.name,diagnosis:v}); p.condition=v;
+    notify('patient',p.patientId,`New diagnosis added: ${v}`); logActivity(`Dr. ${d.name} diagnosed ${p.name} with ${v}`); save(); render();
+  });
+  const addVitals=document.getElementById('addVitals');
+  if(addVitals)addVitals.addEventListener('click',()=>{
+    const p=state.patients.find(x=>x.patientId===selectedPatientId);
+    const bp=document.getElementById('in_bp').value.trim(),hr=document.getElementById('in_hr').value.trim(),temp=document.getElementById('in_temp').value.trim(),sugar=document.getElementById('in_sugar').value.trim();
+    if(!bp)return; p.vitals=p.vitals||[]; p.vitals.push({date:todayStr(),bp,hr,temp,sugar});
+    logActivity(`Vitals recorded for ${p.name}`); save(); render();
+  });
+  const addRx=document.getElementById('addRx');
+  if(addRx)addRx.addEventListener('click',()=>{
+    const p=state.patients.find(x=>x.patientId===selectedPatientId); const d=state.doctors.find(x=>x.doctorId===session.id);
+    const name=document.getElementById('in_med').value.trim(),dosage=document.getElementById('in_dose').value.trim()||'—',duration=document.getElementById('in_dur').value.trim()||'—';
+    if(!name)return; p.prescriptions=p.prescriptions||[]; p.prescriptions.push({date:todayStr(),doctor:d.name,medicines:[{name,dosage,duration}],instructions:''});
+    notify('patient',p.patientId,`New prescription added: ${name}`); logActivity(`Dr. ${d.name} prescribed ${name} to ${p.name}`); save(); render();
+  });
+  const addLab=document.getElementById('addLab');
+  if(addLab)addLab.addEventListener('click',()=>{
+    const p=state.patients.find(x=>x.patientId===selectedPatientId);
+    const test=document.getElementById('in_test').value.trim(),result=document.getElementById('in_result').value;
+    if(!test)return; p.labReports=p.labReports||[]; p.labReports.push({date:todayStr(),test,result}); p.testResult=result;
+    notify('patient',p.patientId,`New lab result: ${test} — ${result}`); logActivity(`Lab result added for ${p.name}: ${test} (${result})`); save(); render();
+  });
+  document.querySelectorAll('[data-acc]').forEach(el=>el.addEventListener('click',()=>{setApptStatus(el.dataset.acc,'Confirmed');}));
+  document.querySelectorAll('[data-rej]').forEach(el=>el.addEventListener('click',()=>{setApptStatus(el.dataset.rej,'Cancelled');}));
+  document.querySelectorAll('[data-comp]').forEach(el=>el.addEventListener('click',()=>{setApptStatus(el.dataset.comp,'Completed');}));
+  document.querySelectorAll('[data-resched]').forEach(el=>el.addEventListener('click',()=>{
+    const a=state.appointments.find(x=>x.id===el.dataset.resched); if(!a)return;
+    const nd=prompt('New date (YYYY-MM-DD):',a.date); if(!nd)return; const nt=prompt('New time (HH:MM):',a.time)||a.time;
+    a.date=nd;a.time=nt; notify('patient',a.patientId,`Appointment rescheduled to ${nd} ${nt}.`); save(); render();
+  }));
+  // admin
+  const grantAdminBtn=document.getElementById('grantAdminBtn');
+  if(grantAdminBtn)grantAdminBtn.addEventListener('click',()=>{
+    adminGrantErr='';
+    const current=state.admins.find(x=>x.adminId===session?.id);
+    const name=document.getElementById('newAdminName')?.value.trim();
+    const mobile=document.getElementById('newAdminMobile')?.value.trim();
+    const email=document.getElementById('newAdminEmail')?.value.trim();
+    const pass=document.getElementById('newAdminPassword')?.value||'';
+    const pass2=document.getElementById('newAdminPassword2')?.value||'';
+    const currentPass=document.getElementById('grantAdminPassword')?.value||'';
+    if(!current){adminGrantErr='Only a signed-in administrator can grant access.';render();return;}
+    if(currentPass!==current.password){adminGrantErr='Authorization failed: current admin password is incorrect.';render();return;}
+    if(!name||!/^[0-9]{10}$/.test(mobile)||!email||pass.length<8){adminGrantErr='Enter a name, valid 10-digit mobile, email, and password of at least 8 characters.';render();return;}
+    if(pass!==pass2){adminGrantErr='New admin passwords do not match.';render();return;}
+    if(state.admins.some(x=>(x.email||'').toLowerCase()===email.toLowerCase())){adminGrantErr='That email is already registered as an administrator.';render();return;}
+    if(state.admins.some(x=>x.mobile===mobile)){adminGrantErr='That mobile number is already registered as an administrator.';render();return;}
+    state.adminSequence=Math.max(9381,state.adminSequence||0)+1;
+    const newId=String(state.adminSequence);
+    state.admins.push({adminId:newId,name,mobile,email,password:pass,signupDate:todayStr(),securityLevel:'2FA',role:'Authorized Administrator',grantedBy:current.name});
+    logActivity(`${current.name} granted administrator access to ${name} (Admin ID ${newId})`);
+    notify('admin',newId,`Administrator access granted by ${current.name}. Your Admin ID is ${newId}.`);
+    save();
+    adminGrantErr=`Access granted successfully. New Admin ID: ${newId}`;
+    render();
+  });
+  const searchInput=document.getElementById('searchInput'),filterDept=document.getElementById('filterDept'),filterGender=document.getElementById('filterGender'),filterTest=document.getElementById('filterTest');
+  if(searchInput){fillPatientTable();[searchInput,filterDept,filterGender,filterTest].forEach(el=>el.addEventListener('input',fillPatientTable)),[filterDept,filterGender,filterTest].forEach(el=>el.addEventListener('change',fillPatientTable));}
+  const resetFilters=document.getElementById('resetFilters');
+  if(resetFilters)resetFilters.addEventListener('click',()=>{searchInput.value='';filterDept.value='';filterGender.value='';filterTest.value='';fillPatientTable();});
+  const exportCsv=document.getElementById('exportCsv');
+  if(exportCsv)exportCsv.addEventListener('click',async()=>{
+    const rows=document.getElementById('patientTableBody')._rows||state.patients;
+    const header='Name,Age,Gender,Condition,Doctor,Department,TestResult,Billing';
+    const csv=[header,...rows.map(p=>[p.name,p.age,p.gender,p.condition,p.doctor,p.department,p.testResult,p.billing].join(','))].join('\n');
+    if(downloadsApi){try{await downloadsApi.save({filename:'patients_export.csv',data:csv});return;}catch(e){}}
+    alert('Download isn\'t available in this view — try again from the published page.');
+  });
+  const apDoc=document.getElementById('apDoc'),apStatus=document.getElementById('apStatus');
+  if(apDoc){fillAppointmentsTable();apDoc.addEventListener('change',fillAppointmentsTable);apStatus.addEventListener('change',fillAppointmentsTable);}
+  if(adminTab==='analytics')drawAdminCharts();
+  if(view==='doctorHome'&&selectedPatientId){const p=state.patients.find(x=>x.patientId===selectedPatientId);if(p)drawVitalsChart(p);}
+}
+function setApptStatus(id,status){
+  const a=state.appointments.find(x=>x.id===id); if(!a)return; a.status=status;
+  if(status==='Confirmed')notify('patient',a.patientId,`Appointment with ${a.doctorName} confirmed for ${a.date} ${a.time}.`);
+  if(status==='Cancelled')notify('patient',a.patientId,`Appointment with ${a.doctorName} was rejected.`);
+  logActivity(`Appointment ${id} marked ${status}`); save(); render();
+}
+function maskMobile(m){return m?m.slice(0,2)+'******'+m.slice(-2):'**********';}
+function createAdminOtp(admin){
+  const arr=new Uint32Array(1);
+  if(window.crypto?.getRandomValues)window.crypto.getRandomValues(arr);
+  const otp=(100000+(arr[0]%900000)).toString();
+  admin2FA={pending:true,otp,expiresAt:Date.now()+5*60*1000,maskedMobile:maskMobile(admin.mobile||''),demoOtp:otp,adminId:admin.adminId};
+}
+function handleAdminLogin(){
+  if(Date.now()<adminLockedUntil){authErr=`Admin login is temporarily locked. Try again in ${Math.ceil((adminLockedUntil-Date.now())/1000)} seconds.`;render();return;}
+  const aid=document.getElementById('f_adminId')?.value.trim();
+  const pass=document.getElementById('f_pass')?.value;
+  const admin=(state.admins||[]).find(x=>x.adminId===aid);
+  if(!admin||pass!==admin.password){
+    adminFailedAttempts++;
+    if(adminFailedAttempts>=5){adminLockedUntil=Date.now()+60*1000;adminFailedAttempts=0;authErr='Too many failed attempts. Admin login locked for 60 seconds.';}
+    else authErr='Invalid Admin ID or password.';
+    render();return;
+  }
+  adminFailedAttempts=0;
+  createAdminOtp(admin);
+  authErr='';
+  authTab='otp';
+  render();
+}
+function verifyAdminOtp(){
+  const entered=document.getElementById('f_otp')?.value.trim();
+  if(!admin2FA.pending){authErr='Verification session expired. Start again.';render();return;}
+  if(Date.now()>admin2FA.expiresAt){admin2FA={pending:false,otp:null,expiresAt:0,maskedMobile:'',demoOtp:'',adminId:null};authErr='OTP expired. Please sign in again.';render();return;}
+  if(entered!==admin2FA.otp){authErr='Incorrect OTP.';render();return;}
+  const admin=(state.admins||[]).find(x=>x.adminId===admin2FA.adminId);
+  if(!admin){admin2FA={pending:false,otp:null,expiresAt:0,maskedMobile:'',demoOtp:'',adminId:null};authErr='Administrator account no longer exists.';render();return;}
+  session={role:'admin',id:admin.adminId,lastActivity:Date.now()};
+  admin2FA={pending:false,otp:null,expiresAt:0,maskedMobile:'',demoOtp:'',adminId:null};
+  authErr=''; view='adminHome'; render();
+}
+function handleAuthSubmit(){
+  authErr='';
+  if(authRole==='admin'){
+    if(authTab==='otp'){verifyAdminOtp();return;}
+    handleAdminLogin();return;
+  }
+  const email=document.getElementById('f_email')?.value.trim();
+  const pass=document.getElementById('f_pass')?.value;
+  if(authRole==='reception') {
+    const rid=document.getElementById('f_receptionId')?.value.trim();
+    const rec=(state.receptionists||[]).find(x=>x.receptionId===rid && x.password===pass);
+    if(!rec){authErr='Invalid Reception ID or password.';render();return;}
+    session={role:'reception',id:rec.receptionId,lastActivity:Date.now()}; view='receptionHome'; render(); return;
+  }
+  if(authTab==='login'){
+    let list=authRole==='patient'?state.patients:state.doctors;
+    const idKey=authRole==='patient'?'patientId':'doctorId';
+    const user=list.find(u=>u.email&&u.email.toLowerCase()===email?.toLowerCase()&&u.password===pass);
+    if(!user){authErr='Invalid email or password.';render();return;}
+    session={role:authRole,id:user[idKey],lastActivity:Date.now()}; view=authRole+'Home'; render(); return;
+  }
+  const name=document.getElementById('f_name')?.value.trim();
+  if(!name||!email||!pass){authErr='Please fill in all required fields.';render();return;}
+  if(authRole==='patient'){
+    if(state.patients.some(p=>p.email&&p.email.toLowerCase()===email.toLowerCase())){authErr='An account with that email already exists.';render();return;}
+    const pid='P'+(20000+state.patients.length+Math.floor(Math.random()*900));
+    const newP={patientId:pid,name,age:+document.getElementById('f_age').value||null,gender:document.getElementById('f_gender').value,bloodGroup:document.getElementById('f_blood').value,
+      email,phone:document.getElementById('f_phone').value,address:document.getElementById('f_address').value,emergencyContact:document.getElementById('f_emergency').value,password:pass,
+      condition:'Pending clinical assessment',doctor:'',department:'',admission:'',discharge:'',billing:0,room:null,bed:null,testResult:'Pending',severity:'',
+      signupDate:todayStr(),registrationStatus:'Registered - Awaiting Reception',paymentStatus:'Not Generated',receipt:null,notes:[],vitals:[],diagnosisHistory:[],labReports:[],prescriptions:[]};
+    state.patients.push(newP); logActivity(`New patient registered: ${name}`); save();
+    session={role:'patient',id:pid,lastActivity:Date.now()}; view='patientHome'; render(); return;
+  }
+  if(authRole==='doctor'){
+    if(state.doctors.some(d=>d.email&&d.email.toLowerCase()===email.toLowerCase())){authErr='An account with that email already exists.';render();return;}
+    const did='D'+(600+state.doctors.length+Math.floor(Math.random()*900));
+    state.doctors.push({doctorId:did,name,department:document.getElementById('f_spec').value,email,password:pass,signupDate:todayStr(),availability:'Available',workingHours:[{start:'09:00',end:'14:00'},{start:'16:00',end:'20:00'}]});
+    logActivity(`New doctor registered: ${name}`); save(); session={role:'doctor',id:did,lastActivity:Date.now()}; view='doctorHome'; render(); return;
+  }
+}
+
+render();
+setInterval(()=>{
+  const now=liveDateTime();
+  document.querySelectorAll('[data-live-clock]').forEach(el=>el.textContent=now);
+  const before=state.patients.map(p=>p.billing).join('|');
+  const changed=accrueBedCharges();
+  document.querySelectorAll('[data-live-billing]').forEach(el=>{const p=state.patients.find(x=>x.patientId===el.dataset.liveBilling);if(p)el.textContent='₹'+currentBillAmount(p).toLocaleString('en-IN',{maximumFractionDigits:2});});
+  if(changed && state.patients.map(p=>p.billing).join('|')!==before){
+    document.querySelectorAll('[data-live-payment-status]').forEach(el=>{const p=state.patients.find(x=>x.patientId===el.dataset.livePaymentStatus);if(p)el.textContent=p.paymentStatus||'Pending';});
+  }
+},1000);
+
+</script>
+</body>
+</html>
