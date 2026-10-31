@@ -279,7 +279,9 @@ function normalizeState(){
   // Keep the primary administrator and any administrators explicitly authorized by an existing admin.
   const existingAdmins=Array.isArray(state.admins)?state.admins:[];
   const primaryExisting=existingAdmins.find(x=>x.adminId===ADMIN_PROFILE.adminId)||existingAdmins[0];
-  const adminPassword=primaryExisting&&primaryExisting.password?primaryExisting.password:'admin123';
+  // Reset the primary demo admin to the published prototype credentials.
+  // Authorized secondary admins retain their own passwords.
+  const adminPassword='admin123';
   const authorizedAdmins=existingAdmins.filter(x=>x&&x.adminId&&x.adminId!==ADMIN_PROFILE.adminId);
   state.admins=[{
     adminId:ADMIN_PROFILE.adminId,
@@ -352,9 +354,10 @@ function fieldsFor(role,tab){
   if(role==='admin'){
     if(tab==='login')return `<div class="security-card">
       <div class="admin-badge">🛡️ Single Administrator · 2-Step Verification</div>
-      <label>Admin ID</label><input id="f_adminId" inputmode="numeric" maxlength="4" placeholder="Enter 4-digit Admin ID">
-      <label>Password</label><input id="f_pass" type="password" placeholder="Admin password">
-      <p class="muted">Only the registered administrator can enter this portal. A second verification step is required after the password.</p>
+      <label>Admin ID</label><input id="f_adminId" inputmode="numeric" maxlength="4" placeholder="Enter 4-digit Admin ID" autocomplete="username">
+      <label>Password</label><input id="f_pass" type="password" placeholder="Admin password" autocomplete="current-password">
+      <p class="muted">Demo credentials — Admin ID: <b>9381</b> · Password: <b>admin123</b></p>
+      <p class="muted">Only the primary administrator can enter this portal. A second verification step is required after the password.</p>
     </div>`;
     if(tab==='otp')return `<div class="security-card">
       <div class="admin-badge">🔐 Step 2 of 2 · Mobile verification</div>
