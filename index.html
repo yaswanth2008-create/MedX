@@ -167,7 +167,11 @@ function normalizeState(){
     if(!d.availability)d.availability=(hashStr(d.name||'Doctor')%10<8?'Available':'Unavailable');
     d.workingHours=Array.isArray(d.workingHours)&&d.workingHours.length ? d.workingHours : [{start:'09:00',end:'14:00'},{start:'16:00',end:'20:00'}];
   });
+  // Repair the default demo account when an older browser copy has stale credentials.
   if(!state.receptionists.length)state.receptionists=[{...RECEPTION_PROFILE}];
+  let demoReception=state.receptionists.find(r=>String(r.receptionId)===RECEPTION_PROFILE.receptionId);
+  if(!demoReception){demoReception={...RECEPTION_PROFILE};state.receptionists.push(demoReception);}
+  else Object.assign(demoReception,RECEPTION_PROFILE);
   if(!state.rooms.length)state.rooms=Array.from({length:40},(_,i)=>({roomNumber:101+i,bedNumber:'B1',status:'Available',patientId:null,department:null}));
   state.rooms.forEach(r=>{r.status=r.status||'Available';r.bedNumber=r.bedNumber||'B1';r.patientId=r.patientId||null;});
   const activeRoomIds=new Set();
@@ -367,7 +371,7 @@ function fieldsFor(role,tab){
     <div><label>Blood group</label><select id="f_blood"><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select></div>
     <div><label>Phone</label><input id="f_phone"></div><div><label>Email</label><input id="f_email" type="email"></div></div>
     <label>Address</label><input id="f_address"><label>Emergency contact</label><input id="f_emergency"><label>Password</label><input id="f_pass" type="password">`;
-  if(role==='reception')return `<label>Reception ID</label><input id="f_receptionId" value="R1001"><label>Password</label><input id="f_pass" type="password" placeholder="Reception password"><div class="security-card"><b>Reception access</b><p class="muted">Reception controls room/doctor assignment and can assign a bed only after the patient's bill is paid.</p></div>`;
+  if(role==='reception')return `<label>Reception ID</label><input id="f_receptionId" value="R1001" autocomplete="username"><label>Password</label><input id="f_pass" type="password" placeholder="Reception password" autocomplete="current-password"><div class="security-card"><b>Demo login credentials</b><p class="muted">Reception ID: <b>R1001</b><br>Password: <b>reception123</b></p><p class="muted">Reception controls doctor/room assignment and bed assignment after payment.</p></div>`;
   if(role==='doctor')return `<div class="grid grid-2"><div><label>Full name</label><input id="f_name"></div>
     <div><label>Department</label><select id="f_spec">${DEPARTMENTS.map(d=>`<option>${d}</option>`).join('')}</select></div>
     <div><label>Email</label><input id="f_email" type="email"></div><div><label>Password</label><input id="f_pass" type="password"></div></div>`;
